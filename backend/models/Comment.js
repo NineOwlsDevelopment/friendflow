@@ -8,14 +8,14 @@ const commentSchema = new Schema(
       default: uuidv4,
       required: true,
     },
-    user: {
-      type: String,
-      ref: "User",
-      required: true,
-    },
     post: {
       type: String,
       ref: "Post",
+      required: true,
+    },
+    author: {
+      type: String,
+      ref: "User",
       required: true,
     },
     body: {
@@ -28,10 +28,6 @@ const commentSchema = new Schema(
         default: "",
       },
     ],
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
   },
   { timestamps: true }
 );

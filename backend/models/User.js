@@ -45,28 +45,6 @@ const userSchema = new Schema(
         ref: "User",
       },
     ],
-    posts: [
-      {
-        type: String,
-        ref: "Post",
-      },
-    ],
-    likes: [
-      {
-        type: String,
-        ref: "Post",
-      },
-    ],
-    comments: [
-      {
-        type: String,
-        ref: "Comment",
-      },
-    ],
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
   },
   {
     timestamps: true,

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "node index.js",
     "build": "tsc"
   },
   "author": "",
@@ -16,6 +16,7 @@
     "binance-api-node": "^0.12.6",
     "bs58": "^5.0.0",
     "connect-mongo": "^5.0.0",
+    "connect-mongodb-session": "^3.1.1",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

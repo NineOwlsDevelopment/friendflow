@@ -10,6 +10,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const ExpressMongoSanitize = require("express-mongo-sanitize");
+const MongoDBStore = require("connect-mongodb-session")(session);
 
 const originList = [process.env.CLIENT_URL];
 const PORT = process.env.PORT || 5000;
@@ -28,6 +29,11 @@ const rateLimiter = ExpressRateLimit({
   max: 60, // limit each IP to 60 requests per minute
 });
 
+const store = new MongoDBStore({
+  uri: process.env.MONGO_URI,
+  collection: "sessions",
+});
+
 // Middleware setup
 app.use(
   cors({
@@ -37,16 +43,13 @@ app.use(
 );
 app.use(
   session({
-    secret: "KwLUfC8heLPzeG1iFRQmtNiYeMLoP3AG5CNVXFPH1CfVD83oPQZB",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: {
-      maxAge: 5 * 60 * 1000,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production" ? true : false,
-    },
+    store: store,
   })
 );
+app;
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(ExpressMongoSanitize());
@@ -74,6 +77,15 @@ if (process.env.NODE_ENV === "production") {
     }
 
     next();
+  });
+}
+
+// Point the server to the build folder of the app
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../client/build")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "../client", "build", "index.html"));
   });
 }
 

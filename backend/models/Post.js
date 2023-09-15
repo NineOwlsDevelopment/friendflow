@@ -8,7 +8,7 @@ const postSchema = new Schema(
       default: uuidv4,
       required: true,
     },
-    user: {
+    author: {
       type: String,
       ref: "User",
       required: true,
@@ -35,10 +35,6 @@ const postSchema = new Schema(
         ref: "Comment",
       },
     ],
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
   },
   { timestamps: true }
 );
