@@ -11,6 +11,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const ExpressMongoSanitize = require("express-mongo-sanitize");
 const MongoDBStore = require("connect-mongodb-session")(session);
+const path = require("path");
 
 const originList = [process.env.CLIENT_URL];
 const PORT = process.env.PORT || 5000;
