@@ -1,0 +1,11 @@
+{
+  "name": "friend_flow",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "cd backend && npm install && npm start",
+    "dev": "cd backend && nodemon index.js"
+  },
+  "dependencies": {
+    "copyfiles": "^2.4.1"
+  }
+}
