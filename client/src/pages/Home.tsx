@@ -82,6 +82,8 @@ export default function Home() {
                     </AboutContentLeft>
 
                     <AboutContentRight>
+                        <h1>About Friend Flow</h1>
+
                         <p>
                             <span>FRiEND FLOW</span>, is a decentralized social media platform that allows users to
                             tokenize their social networks. Users can buy and sell "Links" that are linked to Twitter
@@ -132,6 +134,8 @@ export default function Home() {
 
                 <PlatformContent>
                     <PlatformContentLeft>
+                        <h1>How it Works</h1>
+
                         <p>
                             The <span>FRiEND FLOW</span> platform is designed to be a one-stop-shop for all your
                             creative needs. Whether you are a musician, artist, or content creator, we have got you
@@ -191,7 +195,7 @@ export default function Home() {
                             <h1>Q4</h1>
                             <h1>2024</h1>
                         </MilestoneTitle>
-                        <MilestoneDescription>Launch of New Features</MilestoneDescription>
+                        <MilestoneDescription>Platform Launch</MilestoneDescription>
                     </Milestone>
                     <Milestone>
                         <MilestoneTitle>
@@ -411,10 +415,6 @@ const AboutContent = styled.div`
         margin-bottom: 20px;
     }
 
-    /* img {
-        width: 400px;
-    } */
-
     @media (max-width: 768px) {
         flex-direction: column;
         gap: 20px;
@@ -431,7 +431,6 @@ const AboutContentLeft = styled.div`
 
     img {
         width: 500px;
-        /* background-color: aliceblue; */
     }
 `;
 
@@ -442,6 +441,16 @@ const AboutContentRight = styled.div`
     justify-content: center;
     flex: 50%;
     padding: 0px 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 10px 0px 0px 10px;
+
+    h1 {
+        -webkit-text-stroke-width: 1px;
+        -webkit-text-stroke-color: #000;
+        -webkit-text-fill-color: #fff;
+        font-size: 40px;
+        padding: 15px 20px;
+    }
 
     span {
         font-weight: bold;
@@ -454,11 +463,8 @@ const AboutContentRight = styled.div`
         text-align: left;
         padding: 15px 20px;
         border-radius: 10px;
-        background-color: #fffc00;
         position: relative;
         margin: 10px 0;
-        border: 1px solid #000;
-        /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
     }
 
     @media (max-width: 768px) {
@@ -530,7 +536,7 @@ const PlatformContent = styled.div`
     align-items: center;
 
     p {
-        font-size: 18px;
+        font-size: 16px;
         color: #555;
         line-height: 1.5;
         margin-bottom: 20px;
@@ -549,10 +555,25 @@ const PlatformContent = styled.div`
 const PlatformContentLeft = styled.div`
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-end;
+    align-items: flex-end;
     gap: 20px;
-    flex: 60%;
+    flex: 50%;
+    padding: 20px;
+    border-radius: 0 10px 10px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+
+    h1 {
+        -webkit-text-stroke-width: 1px;
+        -webkit-text-stroke-color: #000;
+        -webkit-text-fill-color: #fff;
+        font-size: 40px;
+        padding: 15px 20px;
+        max-width: 450px;
+        width: 450px;
+        text-align: left;
+    }
 
     p {
         font-size: 16px;
@@ -560,19 +581,34 @@ const PlatformContentLeft = styled.div`
         text-align: left;
         padding: 15px 20px;
         border-radius: 10px;
-        background-color: #fff;
+        /* background-color: #fffc00; */
         position: relative;
         margin: 10px 0;
-        border: 1px solid #000;
+        /* border: 1px solid #000; */
+    }
+
+    @media (max-width: 768px) {
+        font-size: 12px;
+        align-items: center;
+        text-align: center;
+        width: fit-content;
+
+        p {
+            width: fit-content;
+        }
+
+        h1 {
+            width: fit-content;
+        }
     }
 `;
 
 const PlatformContentRight = styled.div`
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
-    flex: 40%;
+    flex: 50%;
     padding: 20px;
 
     span {
@@ -584,6 +620,10 @@ const PlatformContentRight = styled.div`
         font-size: 20px;
         width: 450px;
         text-align: left;
+    }
+
+    img {
+        width: 500px;
     }
 
     @media (max-width: 768px) {
