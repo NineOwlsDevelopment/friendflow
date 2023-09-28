@@ -52,7 +52,6 @@ const getRooms = async (req, res) => {
 // @access  Private
 const getRoom = async (req, res) => {
   try {
-    console.log(req.session);
     const user = await User.findOne({ _id: req.session.user });
 
     if (!user) return res.status(404).send("User not found");
@@ -73,6 +72,10 @@ const getRoom = async (req, res) => {
           limit: 50,
           sort: { createdAt: 1 },
         },
+        populate: {
+          path: "author",
+          model: "User",
+        },
       });
 
       return res.status(200).send(room);
@@ -81,8 +84,6 @@ const getRoom = async (req, res) => {
     const keysOwned = influencer.holders.filter(
       (holder) => holder.user.toString() === user._id.toString()
     )[0]?.quantity;
-
-    // console.log("Keys owned:", keysOwned);
 
     if (!keysOwned) {
       return res.status(401).send({

@@ -186,7 +186,7 @@ const Container = styled.div`
     align-items: center;
     height: fit-content;
     gap: 10px;
-    margin-bottom: 10vh;
+    margin-bottom: 13vh;
 `;
 
 const TransactionCard = styled.div`

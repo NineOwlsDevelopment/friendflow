@@ -245,9 +245,6 @@ const twitterCallback = async (req, res) => {
         req.session._id = uuidv4();
         req.session.user = user._id;
 
-        req.session.cookie._id = uuidv4();
-        req.session.cookie.user = user._id;
-
         // If all operations are successful, commit the transaction
         await session.commitTransaction();
         session.endSession();

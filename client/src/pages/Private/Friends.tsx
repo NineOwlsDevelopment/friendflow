@@ -80,7 +80,7 @@ const Container = styled.div`
     display: flex;
     flex-direction: column;
     height: fit-content;
-    margin-bottom: 11vh;
+    margin-bottom: 14vh;
 `;
 
 const UserCardContainer = styled.div`

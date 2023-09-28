@@ -75,6 +75,11 @@ export default function TradeModal({ label }: { label: string }) {
                 return;
             }
 
+            if (isNaN(formData.amount)) {
+                toast.error('Amount must be a number.');
+                return;
+            }
+
             if (estimatedCost.total > wallet.balance / LAMPORTS_PER_SOL) {
                 toast.error('Insufficient balance.');
                 return;
@@ -116,6 +121,11 @@ export default function TradeModal({ label }: { label: string }) {
     };
 
     const handleDebounceChange = async (e: any) => {
+        // check if amount is a number
+        if (isNaN(e.target.value)) {
+            setFormData({ ...formData, amount: 0 });
+        }
+
         setFormData({ ...formData, amount: e.target.value });
     };
 
@@ -124,6 +134,10 @@ export default function TradeModal({ label }: { label: string }) {
     const getCostEstimate = async () => {
         try {
             if (formData.amount <= 0 || formData.amount > 100) {
+                return;
+            }
+
+            if (isNaN(formData.amount)) {
                 return;
             }
 

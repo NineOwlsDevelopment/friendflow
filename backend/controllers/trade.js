@@ -70,6 +70,10 @@ const createBuy = async (req, res) => {
         throw { status: 400, data: "Invalid amount." };
       }
 
+      if (isNaN(amount)) {
+        throw { status: 400, data: "Invalid amount." };
+      }
+
       const user = await User.findOne({ _id: req.session.user });
       const wallet = await Wallet.findOne({ user: user._id, chain: "solana" });
       const influencer = await User.findOne({ _id: req.body.influencer });
@@ -204,6 +208,10 @@ const createSell = async (req, res) => {
       }
 
       if (amount <= 0 || amount > 100) {
+        throw { status: 400, data: "Invalid amount." };
+      }
+
+      if (isNaN(amount)) {
         throw { status: 400, data: "Invalid amount." };
       }
 

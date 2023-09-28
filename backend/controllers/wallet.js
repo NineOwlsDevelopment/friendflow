@@ -108,6 +108,10 @@ const withdraw = async (req, res) => {
       return res.status(400).send("Invalid amount");
     }
 
+    if (isNaN(amount)) {
+      throw { status: 400, data: "Invalid amount." };
+    }
+
     const balance = await getBalance(wallet.address);
 
     if (balance < amount) {

@@ -57,8 +57,6 @@ export default function Profile() {
             setTimeout(() => {
                 setPending(false);
             }, 500);
-
-            console.log('profile', res.data);
         } catch (err) {
             console.log(err);
 
@@ -291,12 +289,12 @@ const ProfileNav = styled.div`
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    min-height: 10vh;
+    min-height: 13vh;
     top: 0;
-    position: sticky;
+    position: fixed;
+    width: 100%;
     position: -webkit-sticky; /* Safari */
     border-bottom: 1px solid #d1b48c;
-    padding: 0 10px;
     color: #e3e3e3;
     background-color: #18171e;
     z-index: 100;
@@ -316,7 +314,6 @@ const ProfileNavTop = styled.div`
     align-items: space-between;
     width: 100%;
     flex: 70%;
-    padding: 10px !important;
 `;
 
 const ProfileNavTopLeft = styled.div`
@@ -352,6 +349,7 @@ const ProfileNavTopRight = styled.div`
     align-items: center;
     flex: 50%;
     gap: 10px;
+    padding-right: 10px;
     color: #e3e3e3;
 
     div {
@@ -408,8 +406,8 @@ const StyledTabs = styled(Tabs)`
     display: flex;
     position: fixed !important;
     background-color: #18171e;
-    height: 5vh;
-    margin-top: 10vh;
+    height: 6vh;
+    margin-top: 13vh;
     margin-bottom: 10vh !important;
     top: 0 !important;
     width: 100% !important;

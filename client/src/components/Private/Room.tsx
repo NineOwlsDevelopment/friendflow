@@ -280,8 +280,8 @@ const Container = styled.div`
     flex-direction: column;
     height: fit-content;
     width: 100%;
-    margin-top: 6vh; // account for feed/chat tab
-    margin-bottom: 10vh; // account for chat input
+    margin-top: 10vh; // account for feed/chat tab
+    margin-bottom: 12vh; // account for chat input
 `;
 
 const ChatArea = styled.div`
@@ -309,6 +309,7 @@ const ChatInputWrapper = styled.div`
     align-items: center;
     gap: 10px;
     position: fixed;
+    height: 14vh;
     bottom: 0;
     width: 100%;
     border-top: 1px solid #d1b48c;

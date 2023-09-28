@@ -99,7 +99,7 @@ const Nav = styled.div`
     background-color: #18171e;
     justify-content: space-between;
     align-items: center;
-    height: 10vh;
+    height: 13vh;
     position: fixed;
     width: 100%;
     bottom: 0;
