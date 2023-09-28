@@ -40,6 +40,8 @@ const store = new MongoDBStore({
   collection: "sessions",
 });
 
+app.set("trust proxy", 1);
+
 const sessionMiddleware = session({
   secret: process.env.SESSION_SECRET,
   resave: false,
