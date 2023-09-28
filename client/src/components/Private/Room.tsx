@@ -105,6 +105,7 @@ export default function Room() {
                 case 404:
                     console.log('room not found');
                     setHasAccess(false);
+
                     break;
                 case 401:
                     setHasAccess(false);

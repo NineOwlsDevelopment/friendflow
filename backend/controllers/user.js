@@ -187,6 +187,7 @@ const searchUsers = async (req, res) => {
 // @access  Private
 const getFriends = async (req, res) => {
   try {
+    console.log(req.session);
     const user = await User.findOne({ _id: req.session.user }).populate(
       "holding.key"
     );

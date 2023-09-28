@@ -52,6 +52,7 @@ const getRooms = async (req, res) => {
 // @access  Private
 const getRoom = async (req, res) => {
   try {
+    console.log(req.session);
     const user = await User.findOne({ _id: req.session.user });
 
     if (!user) return res.status(404).send("User not found");
