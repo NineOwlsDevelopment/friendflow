@@ -44,6 +44,7 @@ const sessionMiddleware = session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  name: "FriendFlowTech",
   store: store,
   cookie: {
     secure: process.env.NODE_ENV === "production" ? true : false,
