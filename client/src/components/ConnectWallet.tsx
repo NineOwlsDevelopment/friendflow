@@ -10,7 +10,7 @@ import axios from 'axios';
 
 export default function ConnectWallet() {
     const { wallet, publicKey, connected, signMessage, disconnect, connect } = useWallet();
-    const { username, solanaAddress, balance, setUser } = useUserStore();
+    const { username, setUser } = useUserStore();
 
     const handleLogin = async () => {
         if (!wallet || !signMessage || !publicKey) return;

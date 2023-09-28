@@ -8,6 +8,8 @@ import ImageA from '../assets/images/influencerA.png';
 import ImageB from '../assets/images/influencerB.png';
 import ImageC from '../assets/images/influencerC.png';
 import ImageD from '../assets/images/influencerD.png';
+import { FiShare } from 'react-icons/fi';
+import { AiFillPlusSquare } from 'react-icons/ai';
 
 export default function Home() {
     return (
@@ -20,8 +22,8 @@ export default function Home() {
 
                     <BannerSection>
                         <p>
-                            Empower your creative journey on your own terms with <span>FRiEND FLOW</span>. We put the
-                            value in your audience's hands, letting them determine your worth.
+                            <span>FRiEND FLOW</span> is a Web3 Social Fi platform that enables creators to receive
+                            ongoing support from their followers via access keys.
                         </p>
                     </BannerSection>
 
@@ -33,12 +35,67 @@ export default function Home() {
                 </BannerLeft>
 
                 <BannerRight>
-                    <div>
-                        <img src={qrImage} alt="" />
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            maxWidth: '300px',
+                        }}
+                    >
+                        <img
+                            src={qrImage}
+                            alt=""
+                            style={{
+                                marginBottom: '20px',
+                            }}
+                        />
 
                         <span>
-                            <CameraAltIcon /> Scan To Use With Phantom Wallet
+                            <CameraAltIcon /> Scan To install on mobile.
                         </span>
+
+                        <div
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'space-between',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                width: '100%',
+                            }}
+                        >
+                            <span>Step 1:</span>
+
+                            <span>
+                                <FiShare />
+                                <span>Click Share icon</span>
+                            </span>
+                        </div>
+
+                        <div
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'space-between',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                width: '100%',
+                            }}
+                        >
+                            <span>Step 2:</span>
+
+                            <span>
+                                <span
+                                    style={{
+                                        backgroundColor: '#3a3a3a',
+                                        padding: '0px 10px',
+                                        borderRadius: '5px',
+                                    }}
+                                >
+                                    Add to Homescreen
+                                </span>
+                            </span>
+                        </div>
                     </div>
                 </BannerRight>
             </HeroBanner>
@@ -50,7 +107,7 @@ export default function Home() {
                         <stop stop-color="rgb(255, 252, 0)" stop-opacity="1" offset="100%"></stop>
                     </linearGradient>
                 </defs>
-                <rect width="100%" height="100%" fill="#fff"></rect>
+                <rect width="100%" height="100%" fill="#18171e"></rect>
                 <g fill="url(#ssspill-grad)">
                     <rect width="100%" height="40" fill="rgb(255, 252, 0)"></rect>
 
@@ -62,7 +119,7 @@ export default function Home() {
                     <rect x="250" width="7.69%" height="65.5804305879604" rx="15"></rect>
                     <rect x="300" width="7.69%" height="84.88602647084583" rx="15"></rect>
                 </g>
-                <g fill="#fff">
+                <g fill="#18171e">
                     <rect x="25" y="22.072851960603135" width="7.69%" height="60" rx="15"></rect>
                     <rect x="75" y="11.934671621796536" width="7.69%" height="60" rx="15"></rect>
                     <rect x="125" y="21.598732239770534" width="7.69%" height="60" rx="15"></rect>
@@ -74,7 +131,7 @@ export default function Home() {
 
             {/* About Section */}
             <AboutSection id="about">
-                <AboutTitle>ABOUT FRiEND FLOW</AboutTitle>
+                {/* <AboutTitle>ABOUT FRiEND FLOW</AboutTitle> */}
 
                 <AboutContent>
                     <AboutContentLeft>
@@ -85,16 +142,17 @@ export default function Home() {
                         <h1>About Friend Flow</h1>
 
                         <p>
-                            <span>FRiEND FLOW</span>, is a decentralized social media platform that allows users to
-                            tokenize their social networks. Users can buy and sell "Links" that are linked to Twitter
-                            accounts. These keys represent a creator's influence and can be traded for access to private
-                            chatrooms and other perks
+                            <span>FRiEND FLOW</span> is a web3 social media platform that allows users to tokenize their
+                            social networks. Users can buy and sell <span>Access Keys</span> that are linked to a
+                            creator. These keys represent a creator's influence and can be traded for access to private
+                            chatrooms, group voice, and group video calls, along with many other perks.
                         </p>
 
                         <p>
-                            Friend Flow is built on Solana, a layer 1 high throughput blockchain. The app is currently
-                            invite-only, so users need an access code to register. Users can obtain access codes from
-                            friends or by looking for users sharing codes on social media
+                            Friend Flow is built on top of the Solana Network, Solana is a high throughput layer 1
+                            blockchain. The app is currently invite-only, so users need an access code to register.
+                            Users can obtain access codes from friends or by looking for users sharing codes on social
+                            media
                         </p>
                     </AboutContentRight>
                 </AboutContent>
@@ -103,13 +161,13 @@ export default function Home() {
             <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 325 100">
                 <defs>
                     <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="ssspill-grad">
-                        <stop stop-color="#fff" stop-opacity="1" offset="100%"></stop>
-                        <stop stop-color="#fff" stop-opacity="1" offset="100%"></stop>
+                        <stop stop-color="#18171e" stop-opacity="1" offset="100%"></stop>
+                        <stop stop-color="#18171e" stop-opacity="1" offset="100%"></stop>
                     </linearGradient>
                 </defs>
                 <rect width="100%" height="100%" fill="#fffc00"></rect>
                 <g fill="#fffc00">
-                    <rect width="100%" height="40" fill="#fff"></rect>
+                    <rect width="100%" height="40" fill="#18171e"></rect>
 
                     <rect x="0" y="22.072851960603135" width="7.69%" height="69.41768370754039" rx="15"></rect>
                     <rect x="50" width="7.69%" height="73.0126681313619" rx="15"></rect>
@@ -119,7 +177,7 @@ export default function Home() {
                     <rect x="250" width="7.69%" height="65.5804305879604" rx="15"></rect>
                     <rect x="300" y="25.30613588710104" width="7.69%" height="84.88602647084583" rx="15"></rect>
                 </g>
-                <g fill="#fff">
+                <g fill="#18171e">
                     <rect x="25" y="22.072851960603135" width="7.69%" height="60" rx="15"></rect>
                     <rect x="75" y="11.934671621796536" width="7.69%" height="60" rx="15"></rect>
                     <rect x="125" y="21.598732239770534" width="7.69%" height="60" rx="15"></rect>
@@ -129,7 +187,7 @@ export default function Home() {
                 </g>
             </svg>
 
-            <PlatformSection id="platform">
+            {/* <PlatformSection id="platform">
                 <PlatformTitle>It's All On Your Terms</PlatformTitle>
 
                 <PlatformContent>
@@ -155,7 +213,7 @@ export default function Home() {
                         <img src={ImageD} alt="" />
                     </PlatformContentRight>
                 </PlatformContent>
-            </PlatformSection>
+            </PlatformSection> */}
 
             <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 325 100">
                 <defs>
@@ -164,7 +222,7 @@ export default function Home() {
                         <stop stop-color="rgb(255, 252, 0)" stop-opacity="1" offset="100%"></stop>
                     </linearGradient>
                 </defs>
-                <rect width="100%" height="100%" fill="#fff"></rect>
+                <rect width="100%" height="100%" fill="#18171e"></rect>
                 <g fill="url(#ssspill-grad)">
                     <rect width="100%" height="40" fill="rgb(255, 252, 0)"></rect>
 
@@ -176,7 +234,7 @@ export default function Home() {
                     <rect x="250" width="7.69%" height="65.5804305879604" rx="15"></rect>
                     <rect x="300" width="7.69%" height="84.88602647084583" rx="15"></rect>
                 </g>
-                <g fill="#fff">
+                <g fill="#18171e">
                     <rect x="25" y="22.072851960603135" width="7.69%" height="60" rx="15"></rect>
                     <rect x="75" y="11.934671621796536" width="7.69%" height="60" rx="15"></rect>
                     <rect x="125" y="21.598732239770534" width="7.69%" height="60" rx="15"></rect>
@@ -187,7 +245,7 @@ export default function Home() {
             </svg>
 
             {/* Roadmap Section */}
-            <RoadmapSection id="roadmap">
+            {/* <RoadmapSection id="roadmap">
                 <RoadmapTitle>The Path Forward</RoadmapTitle>
                 <MilestoneContainer>
                     <Milestone>
@@ -219,7 +277,7 @@ export default function Home() {
                         <MilestoneDescription>Exciting Partnerships</MilestoneDescription>
                     </Milestone>
                 </MilestoneContainer>
-            </RoadmapSection>
+            </RoadmapSection> */}
         </Container>
     );
 }
@@ -279,8 +337,8 @@ const BannerLeft = styled.div`
     }
 
     @media (max-width: 768px) {
-        padding: 50px;
-        flex: 100%;
+        /* padding: 50px; */
+        width: 100%;
         height: fit-content;
     }
 `;
@@ -333,13 +391,13 @@ const BannerRight = styled.div`
     }
 
     div {
-        background-color: #fff;
+        background-color: #18171e;
         padding: 20px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        gap: 30px;
+        gap: 10px;
         border-radius: 15px;
         font-weight: bold;
     }
@@ -350,13 +408,19 @@ const BannerRight = styled.div`
         align-items: center;
         gap: 10px;
     }
+
+    @media (max-width: 768px) {
+        flex: 100%;
+        height: fit-content;
+    }
 `;
 
 // ABOUT SECTION
 const AboutSection = styled.div`
     display: flex;
     flex-direction: column;
-    background-color: #fff;
+    /* background-color: #fff; */
+    background-color: #18171e;
     padding: 80px 0;
     text-align: center;
     overflow-x: hidden !important;
@@ -365,41 +429,23 @@ const AboutSection = styled.div`
 
 const AboutTitle = styled.div`
     display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
+    justify-content: center;
+    align-items: center;
     padding: 20px;
     font-size: 36px;
     color: #333;
     font-size: 40px;
     font-weight: bold;
     margin-bottom: 20px;
-    width: 100%;
     font-size: 4.5rem;
     font-weight: bolder;
     color: #000;
     z-index: 1;
+    background-color: #fff;
 
     -webkit-text-stroke-width: 3px;
     -webkit-text-stroke-color: #000;
     -webkit-text-fill-color: #fff;
-
-    animation: slide 8s linear infinite;
-
-    @keyframes slide {
-        0% {
-            /* Start off screen to the right */
-            transform: translate3d(100%, 0, 0);
-        }
-
-        100% {
-            /* Move off screen to the left */
-            transform: translate3d(-70%, 0, 0);
-        }
-    }
-
-    @media (max-width: 768px) {
-        justify-content: center;
-    }
 `;
 
 const AboutContent = styled.div`
@@ -410,7 +456,7 @@ const AboutContent = styled.div`
 
     p {
         font-size: 18px;
-        color: #555;
+        color: #e3e3e3;
         line-height: 1.5;
         margin-bottom: 20px;
     }
@@ -441,9 +487,10 @@ const AboutContentRight = styled.div`
     justify-content: center;
     flex: 50%;
     padding: 0px 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* box-shadow: 0 4px 6px rgba(190, 190, 190, 0.1); */
     border-radius: 10px 0px 0px 10px;
 
+    border: 1px solid #fffc00;
     h1 {
         -webkit-text-stroke-width: 1px;
         -webkit-text-stroke-color: #000;

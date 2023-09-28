@@ -12,6 +12,11 @@ const cookieParser = require("cookie-parser");
 const ExpressMongoSanitize = require("express-mongo-sanitize");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const path = require("path");
+const { updateCoinPrices } = require("./utils/price");
+const { subscribeAccountChanges } = require("./utils/solana");
+
+const User = require("./models/User");
+const Room = require("./models/Room");
 
 const originList = [process.env.CLIENT_URL];
 const PORT = process.env.PORT || 5000;
@@ -27,12 +32,37 @@ const io = socketIo(server, {
 // Rate limit configuration
 const rateLimiter = ExpressRateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 60, // limit each IP to 60 requests per minute
+  max: 120, // limit each IP to 60 requests per minute
 });
 
 const store = new MongoDBStore({
   uri: process.env.MONGO_URI,
   collection: "sessions",
+});
+
+const sessionMiddleware = session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  store: store,
+  cookie: {
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    httpOnly: true, // Restrict access to cookies via JavaScript
+    sameSite: "strict", // Protect against CSRF attacks
+    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // Set the expiration time here
+  },
+});
+
+io.use((socket, next) => {
+  sessionMiddleware(socket.request, {}, next);
+});
+
+app.use(sessionMiddleware);
+
+// Middleware to add io instance to req object
+app.use((req, res, next) => {
+  req.io = io;
+  next();
 });
 
 // Middleware setup
@@ -42,15 +72,7 @@ app.use(
     credentials: true,
   })
 );
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    store: store,
-  })
-);
-app;
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(ExpressMongoSanitize());
@@ -60,6 +82,13 @@ app.use(express.json());
 // Route Middlewares
 app.use("/api/auth", rateLimiter, require("./routes/auth"));
 app.use("/api/user", rateLimiter, require("./routes/user"));
+app.use("/api/room", rateLimiter, require("./routes/room"));
+app.use("/api/coin", rateLimiter, require("./routes/coin"));
+app.use("/api/wallet", rateLimiter, require("./routes/wallet"));
+app.use("/api/key", rateLimiter, require("./routes/key"));
+app.use("/api/message", rateLimiter, require("./routes/message"));
+app.use("/api/trade", rateLimiter, require("./routes/trade"));
+app.use("/api/transaction", rateLimiter, require("./routes/transaction"));
 
 // Redirect http to https and remove www from URL (for production)
 if (process.env.NODE_ENV === "production") {
@@ -90,21 +119,59 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-const users = {}; // or use a Map if you prefer
+const getUser = async (userID) => {
+  try {
+    const user = await User.findOne({ _id: userID });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return user;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
 
 // WebSocket routing
 io.on("connection", (socket) => {
-  console.log(socket.id);
+  console.log("A user connected:", socket.id);
 
-  socket.on("message", (message) => {
-    console.log(socket.handshake.headers);
-    // socket.broadcast.emit("message", message);
+  console.log("Number of connections:", io.engine.clientsCount);
+
+  socket.on("join_room", (room_id) => {
+    getUser(socket.request.session.user).then(async (user) => {
+      if (!user) {
+        return socket.disconnect();
+      }
+
+      const isUserInRoom = await Room.exists({
+        _id: room_id,
+        users: { $in: [user._id] },
+      });
+
+      if (!isUserInRoom) {
+        return socket.disconnect();
+      }
+
+      console.log("user from socket:", user._id);
+      console.log("A user joined room:", room_id);
+      socket.join(room_id);
+    });
   });
 
   socket.on("disconnect", () => {
     console.log("A user disconnected");
   });
 });
+
+updateCoinPrices();
+
+// Update coin prices every 5 minutes
+setInterval(() => {
+  updateCoinPrices();
+}, 5 * 60 * 1000);
 
 // Start the server
 server.listen(PORT, () => {

@@ -45,16 +45,6 @@ class SocketService {
     }
 
     public emit(eventName: string, data?: any): void {
-        // add access token to data
-        const accessToken = localStorage.getItem('accessToken');
-
-        if (accessToken) {
-            data = {
-                ...data,
-                accessToken,
-            };
-        }
-
         this.socket.emit(eventName, data);
     }
 }

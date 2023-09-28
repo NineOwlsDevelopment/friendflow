@@ -7,6 +7,7 @@ import OtherHousesIcon from '@mui/icons-material/OtherHouses';
 import MenuIcon from '@mui/icons-material/Menu';
 import { BiHomeAlt2, BiMapAlt, BiFingerprint } from 'react-icons/bi';
 import { CgWebsite } from 'react-icons/cg';
+import ConnectTwitter from './ConnectTwitter';
 
 interface disabledProps {
     disabled?: boolean;
@@ -50,7 +51,7 @@ export default function Navbar() {
                 }}
             >
                 <NavLeft>
-                    <a href="#home">
+                    <a href="/#home">
                         <NavLogo>
                             <img src={Logo} alt="Friiend Logo" />
                         </NavLogo>
@@ -58,21 +59,21 @@ export default function Navbar() {
                 </NavLeft>
 
                 <NavCenter>
-                    <a href="#home">
+                    <a href="/#home">
                         <NavLink disabled={false}>
                             <BiHomeAlt2 />
                             Home
                         </NavLink>
                     </a>
 
-                    <a href="#about">
+                    <a href="/#about">
                         <NavLink disabled={false}>
                             <BiFingerprint />
                             About
                         </NavLink>
                     </a>
 
-                    <a href="#platform">
+                    {/* <a href="#platform">
                         <NavLink disabled={false}>
                             <CgWebsite />
                             Platform
@@ -84,11 +85,12 @@ export default function Navbar() {
                             <BiMapAlt />
                             Roadmap
                         </NavLink>
-                    </a>
+                    </a> */}
                 </NavCenter>
 
                 <NavRight>
-                    <ConnectWallet />
+                    {/* <ConnectWallet /> */}
+                    <ConnectTwitter />
                 </NavRight>
             </NavContainer>
         </Nav>
@@ -105,6 +107,7 @@ const Nav = styled.div`
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    color: #18171e;
 
     a {
         font-size: 1rem !important;
@@ -189,7 +192,7 @@ const NavLogo = styled.div`
 
 const NavCenter = styled.div`
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
     align-items: center;
     flex: 34%;
     gap: 10px;

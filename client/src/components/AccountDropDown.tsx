@@ -8,7 +8,7 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import LogoutIcon from '@mui/icons-material/Logout';
 
 export default function AccountDropDown() {
-    const { username, solanaAddress, balance, setUser } = useUserStore();
+    const { username, setUser } = useUserStore();
     const { wallet, publicKey, connected, signMessage, disconnect, connect } = useWallet();
     const [open, setOpen] = React.useState(false);
 
@@ -18,15 +18,9 @@ export default function AccountDropDown() {
 
     return (
         <>
-            {connected && solanaAddress && (
+            {connected && (
                 <DropDownContainer>
-                    <AccountButton onClick={handleClick}>
-                        {solanaAddress.slice(0, 4) +
-                            '...' +
-                            solanaAddress.slice(solanaAddress.length - 4, solanaAddress.length)}
-
-                        <ExpandMoreIcon />
-                    </AccountButton>
+                    <AccountButton onClick={handleClick}></AccountButton>
 
                     <DropDown
                         style={{

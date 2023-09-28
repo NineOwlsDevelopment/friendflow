@@ -16,7 +16,7 @@ export default function Footer() {
                     <RxDiscordLogo />
                 </SocialLink>
             </SocialLinks>
-            <Copyright>&copy; 2023 Friend Flow</Copyright>
+            <Copyright>&copy; {new Date().getFullYear()} Friend Flow</Copyright>
         </Container>
     );
 }
@@ -26,8 +26,8 @@ const Container = styled.div`
     display: flex;
     flex-direction: column;
     height: 200px;
-    background-color: #fff;
-    color: #000;
+    background-color: #18171e;
+    color: #e3e3e3;
     justify-content: center;
     align-items: center;
 `;
@@ -39,7 +39,7 @@ const SocialLinks = styled.div`
 const SocialLink = styled.a`
     margin-right: 20px;
     text-decoration: none;
-    color: #000;
+    color: #e3e3e3;
     font-weight: bold;
     transition: color 0.3s ease;
 
@@ -48,7 +48,7 @@ const SocialLink = styled.a`
     }
 
     &:hover {
-        color: #a3a3a3;
+        color: #e3e3e3;
     }
 `;
 

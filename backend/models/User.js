@@ -8,49 +8,126 @@ const userSchema = new Schema(
       default: uuidv4,
       required: true,
     },
+    twitterId: {
+      type: String,
+      sparse: true,
+      index: {
+        unique: true,
+        partialFilterExpression: { twitterId: { $type: "string" } },
+      },
+    },
     username: {
       type: String,
       unique: true,
       sparse: true,
       trim: true,
       minLength: 3,
-      maxLength: 50,
+      maxLength: 30,
+      required: true,
     },
-    bio: {
+    displayName: {
       type: String,
-      default: "",
+      unique: true,
+      sparse: true,
+      trim: false,
+      minLength: 3,
+      maxLength: 50,
+      required: true,
+    },
+    email: {
+      type: String,
+      sparse: true,
+      trim: true,
+      lowercase: true,
+      index: {
+        unique: true,
+        partialFilterExpression: { email: { $type: "string" } },
+      },
     },
     avatar: {
       type: String,
       default: "",
     },
-    solanaAddress: {
+    rank: {
       type: String,
-      required: true,
-      unique: true,
+      enum: ["socialite", "influencer", "celebrity", "legend"],
+      default: "socialite",
     },
-    balance: {
+    price: {
+      type: Number,
+      default: 0,
+      required: true,
+    },
+    volume: {
       type: Number,
       default: 0,
     },
-    followers: [
+    earnings: {
+      type: Number,
+      default: 0,
+    },
+    marketCap: {
+      type: Number,
+      default: 0,
+    },
+    followers: {
+      type: Number,
+      default: 0,
+      required: true,
+    },
+    following: {
+      type: Number,
+      default: 0,
+      required: true,
+    },
+    holders: [
       {
-        type: String,
-        ref: "User",
+        user: {
+          type: String,
+          ref: "User",
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+          default: 1,
+        },
       },
     ],
-    following: [
+    holding: [
       {
-        type: String,
-        ref: "User",
+        key: {
+          type: String,
+          ref: "User",
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+          default: 1,
+        },
       },
     ],
+    minimumKeys: {
+      type: Number,
+      default: 1,
+      required: true,
+    },
+    minKeysLastUpdated: {
+      type: Date,
+      default: Date.now() - 24 * 60 * 60 * 1000,
+    },
+    claimed: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
     toJSON: {
       transform: (_, ret) => {
         delete ret.__v;
+        delete ret.email;
       },
     },
   }
