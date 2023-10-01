@@ -68,7 +68,16 @@ export default function Twitter() {
     return (
         <>
             <Container>
-                <div>
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '10px',
+                        fontSize: '20px',
+                    }}
+                >
                     <h2>Authenticating...</h2>
                 </div>
                 <Stack spacing={2} direction="row">
@@ -84,7 +93,7 @@ const Container = styled.div`
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 70vh;
+    height: 90vh;
 
     -webkit-text-stroke-width: 1px; /* Adjust the width as needed */
     -webkit-text-stroke-color: black;

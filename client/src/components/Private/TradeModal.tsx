@@ -4,9 +4,7 @@ import { useWalletStore, useProfileStore, useUserStore } from '../../store';
 
 import Button from '@mui/material/Button';
 import Modal from '@mui/material/Modal';
-import { BsUpload } from 'react-icons/bs';
 import CircularProgress from '@mui/material/CircularProgress';
-import { MdOutlineViewInAr } from 'react-icons/md';
 
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -15,11 +13,10 @@ import Box from '@mui/material/Box';
 import { toast } from 'react-toastify';
 
 import axios from 'axios';
-import { Divider } from '@mui/material';
 
 import debounce from 'lodash.debounce';
-import { set } from 'lodash';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { get, set } from 'lodash';
 
 export default function TradeModal({ label }: { label: string }) {
     const wallet = useWalletStore();
@@ -28,16 +25,13 @@ export default function TradeModal({ label }: { label: string }) {
 
     const [tab, setTab] = React.useState('buy');
     const [open, setOpen] = React.useState(false);
-    const [copied, setCopied] = React.useState(false);
     const [pending, setPending] = React.useState(false);
-    const [price, setPrice] = React.useState(0.0);
     const [tx, setTx] = React.useState('');
     const [formData, setFormData] = React.useState({
         side: 'buy',
-        influencer: profile._id,
+        influencer: '',
         amount: 0.5,
     });
-    const [displayAmount, setDisplayAmount] = React.useState(0.5);
 
     const [estimatedCost, setEstimatedCost] = React.useState({
         price: 0,
@@ -45,16 +39,25 @@ export default function TradeModal({ label }: { label: string }) {
         total: 0,
     });
 
-    const handleOpen = () => setOpen(true);
+    const handleOpen = () => {
+        setOpen(true);
+        setFormData({ ...formData, influencer: profile._id });
+        getCostEstimate();
+    };
 
     const handleClose = () => {
         setFormData({
             side: 'buy',
-            influencer: profile._id,
+            influencer: '',
             amount: 0.5,
         });
         setTab('buy');
         setTx('');
+        setEstimatedCost({
+            price: 0,
+            fee: 0,
+            total: 0,
+        });
         setOpen(false);
     };
 
@@ -65,13 +68,13 @@ export default function TradeModal({ label }: { label: string }) {
 
     const handleTrade = async () => {
         try {
-            if (formData.amount <= 0) {
-                toast.error('Amount must be greater than 0.');
+            if (formData.amount < 0.001) {
+                toast.error('Amount must be between 0.001 and 100.');
                 return;
             }
 
             if (formData.amount > 100) {
-                toast.error('Amount must be less than 100.');
+                toast.error('Amount must be between 0.001 and 100.');
                 return;
             }
 
@@ -80,15 +83,17 @@ export default function TradeModal({ label }: { label: string }) {
                 return;
             }
 
-            if (estimatedCost.total > wallet.balance / LAMPORTS_PER_SOL) {
-                toast.error('Insufficient balance.');
+            if (formData.side === 'buy' && estimatedCost.total / LAMPORTS_PER_SOL > wallet.balance / LAMPORTS_PER_SOL) {
+                toast.error('Not enough SOL.');
                 return;
             }
 
             if (formData.side === 'sell' && formData.amount > (profile.keysOwned || 0)) {
-                toast.error('Insufficient keys.');
+                toast.error("You don't own that many keys.");
                 return;
             }
+
+            setPending(true);
 
             const response = await axios.post(
                 `${process.env.REACT_APP_SERVER_URL}/trade/${formData.side}`,
@@ -102,6 +107,8 @@ export default function TradeModal({ label }: { label: string }) {
                 }
             );
 
+            setPending(false);
+
             if (response.status === 200) {
                 profile.setProfile(response.data);
                 handleClose();
@@ -109,31 +116,39 @@ export default function TradeModal({ label }: { label: string }) {
                 if (formData.side === 'buy') {
                     toast.success(`Purchase of ${formData.amount} ${profile.displayName} key(s) successful.`);
                     profile.setKeysOwned(Number(profile.keysOwned) + Number(formData.amount));
+                    wallet.setBalance(wallet.balance - estimatedCost.total);
                 } else {
                     toast.success(`Sale of ${formData.amount} ${profile.displayName} key(s) successful.`);
                     profile.setKeysOwned(Number(profile.keysOwned) - Number(formData.amount));
+                    wallet.setBalance(wallet.balance + estimatedCost.total);
                 }
             }
         } catch (err: any) {
             console.log(err);
-            toast.error(err.response.data.message);
+            toast.error('Something went wrong. Please try again later.');
+            setPending(false);
         }
     };
 
-    const handleDebounceChange = async (e: any) => {
-        // check if amount is a number
+    const handleInputChange = async (e: any) => {
         if (isNaN(e.target.value)) {
             setFormData({ ...formData, amount: 0 });
+        }
+
+        if (e.target.value > 100) {
+            return setFormData({ ...formData, amount: 100 });
         }
 
         setFormData({ ...formData, amount: e.target.value });
     };
 
-    const debouncedHandleChange = debounce(handleDebounceChange, 600);
-
     const getCostEstimate = async () => {
         try {
-            if (formData.amount <= 0 || formData.amount > 100) {
+            if (!formData.influencer) return;
+
+            if (!formData.amount) return;
+
+            if (formData.amount < 0.001 || formData.amount > 100) {
                 return;
             }
 
@@ -142,7 +157,7 @@ export default function TradeModal({ label }: { label: string }) {
             }
 
             const response = await axios.get(
-                `${process.env.REACT_APP_SERVER_URL}/trade/estimate/${formData.side}/${formData.amount}/${profile._id}`,
+                `${process.env.REACT_APP_SERVER_URL}/trade/estimate/${formData.side}/${formData.amount}/${formData.influencer}`,
                 { withCredentials: true }
             );
 
@@ -163,13 +178,12 @@ export default function TradeModal({ label }: { label: string }) {
     useEffect(() => {
         if (!open) return;
 
-        if (formData.amount <= 0) {
+        if (formData.amount <= 0 || formData.amount > 100) {
             return;
         }
 
         getCostEstimate();
-        setFormData({ ...formData, amount: formData.amount });
-    }, [formData.amount, formData.side]);
+    }, [formData.amount, formData.side, formData.influencer]);
 
     return (
         <>
@@ -198,9 +212,18 @@ export default function TradeModal({ label }: { label: string }) {
                                     access keys
                                 </span>
 
-                                <span>
-                                    Keys Owned: <strong>{profile.keysOwned?.toFixed(2)} </strong>
-                                </span>
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        padding: '10px',
+                                    }}
+                                >
+                                    <span>
+                                        Keys Owned: <strong>{profile.keysOwned?.toFixed(2)} </strong>
+                                    </span>
+                                </div>
                             </ContainerHeader>
 
                             <ContainerBody>
@@ -245,11 +268,12 @@ export default function TradeModal({ label }: { label: string }) {
                                             </StyledKeyButton>
 
                                             <Input
+                                                value={formData.amount}
                                                 type="number"
                                                 max={100}
                                                 min={0.001}
                                                 placeholder={formData.amount.toString()}
-                                                onChange={debouncedHandleChange}
+                                                onChange={handleInputChange}
                                             />
                                         </div>
                                     </InputContainer>
@@ -257,23 +281,26 @@ export default function TradeModal({ label }: { label: string }) {
                                     <PurchaseSummary>
                                         <PurchaseSummaryItem>
                                             <span>Price</span>
-                                            <span>{estimatedCost.price.toFixed(4)} SOL</span>
+                                            <span>{(estimatedCost.price / LAMPORTS_PER_SOL).toFixed(8)} SOL</span>
                                         </PurchaseSummaryItem>
 
                                         <PurchaseSummaryItem>
                                             <span>Fee</span>
-                                            <span>{estimatedCost.fee.toFixed(4)} SOL</span>
+                                            <span>{(estimatedCost.fee / LAMPORTS_PER_SOL).toFixed(8)} SOL</span>
                                         </PurchaseSummaryItem>
 
                                         <PurchaseSummaryItem>
                                             <span>Total</span>
-                                            <span>{estimatedCost.total.toFixed(4)} SOL</span>
+                                            <span>{(estimatedCost.total / LAMPORTS_PER_SOL).toFixed(8)} SOL</span>
                                         </PurchaseSummaryItem>
                                     </PurchaseSummary>
                                 </Box>
                             </ContainerBody>
 
                             <ContainerFooter>
+                                <span>
+                                    Balance: <strong>{(wallet.balance / LAMPORTS_PER_SOL).toFixed(3)} SOL</strong>
+                                </span>
                                 <div
                                     style={{
                                         display: 'flex',
@@ -286,7 +313,7 @@ export default function TradeModal({ label }: { label: string }) {
                                         <>
                                             <StyledCancel onClick={handleClose}>Cancel</StyledCancel>
                                             <StyledButton onClick={handleTrade}>
-                                                {tab === 'buy' ? `Buy ${formData.amount}` : `Sell ${formData.amount}`}
+                                                {tab === 'buy' ? `Buy ` : `Sell `}
                                             </StyledButton>
                                         </>
                                     )}
@@ -364,7 +391,6 @@ const ContainerHeader = styled.div`
     border-bottom: 1px solid #d1b48c;
     flex: 20%;
     color: #d1b48c;
-    gap: 10px;
 `;
 
 const ContainerBody = styled.div`
@@ -375,7 +401,7 @@ const ContainerBody = styled.div`
     width: 100%;
     height: fit-content;
     flex-direction: column;
-    flex: 60%;
+    flex: 50%;
     color: #e3e3e3;
 `;
 
@@ -453,8 +479,7 @@ const ContainerFooter = styled.div`
     width: 100%;
     height: fit-content;
     border-top: 1px solid #d1b48c;
-    flex: 20%;
-    gap: 10px;
+    flex: 30%;
 `;
 
 const StyledButton = styled.button`
@@ -468,6 +493,7 @@ const StyledButton = styled.button`
     width: 120px;
     padding: 10px;
     font-size: 1.1rem;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease-in-out;
 
@@ -505,6 +531,7 @@ const StyledCancel = styled.button`
     width: 120px;
     padding: 10px;
     font-size: 1.1rem;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease-in-out;
 

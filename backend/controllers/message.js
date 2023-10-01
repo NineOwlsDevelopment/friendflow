@@ -20,10 +20,10 @@ const createMessage = async (req, res) => {
       return res.status(400).send("Message cannot be empty");
     }
 
-    const user = await User.findOne({ _id: req.session.user });
+    const user = await User.getUser(req.session.user);
 
     if (!user) {
-      return res.status(400).send("User not found");
+      return res.status(511).send("User not found");
     }
 
     const room = await Room.findOne({
@@ -44,7 +44,7 @@ const createMessage = async (req, res) => {
     }
 
     const message = await Message.create({
-      body: body,
+      body: body.toString(),
       author: user._id,
       room: room_id,
     });

@@ -96,7 +96,7 @@ const Container = styled.div`
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid #000;
+    border: 1px solid #18171e;
     max-width: 500px;
     max-height: fit-content;
     width: 90%;
@@ -104,7 +104,8 @@ const Container = styled.div`
     border-radius: 15px;
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5);
     background-color: #fff;
-    color: #000;
+    color: #18171e;
+    font-weight: 600;
 `;
 
 const ContainerHeader = styled.div`
@@ -113,7 +114,7 @@ const ContainerHeader = styled.div`
     align-items: center;
     height: fit-content;
     width: 100%;
-    border-bottom: 1px solid #e6e6e6;
+    border-bottom: 1px solid #e3e3e3;
     flex: 20%;
     font-size: 1.3rem;
 `;
@@ -137,7 +138,9 @@ const WalletAddress = styled.div`
     width: 100%;
     height: fit-content;
     flex-direction: column;
-    color: #a3a3a3;
+    color: #18171e;
+    font-size: 1.1rem;
+    font-weight: 600;
     cursor: pointer;
 
     span {
@@ -157,7 +160,7 @@ const ContainerFooter = styled.div`
     align-items: center;
     width: 100%;
     height: fit-content;
-    border-top: 1px solid #e6e6e6;
+    border-top: 1px solid #e3e3e3;
     flex: 20%;
 `;
 
@@ -166,12 +169,13 @@ const StyledButton = styled.button`
     justify-content: center;
     align-items: center;
     background-color: #18171e;
-    color: #e3e3e3;
+    color: #fff;
     border: 1px solid #18171e;
     border-radius: 25px;
     width: 120px;
     padding: 10px;
     font-size: 1.1rem;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease-in-out;
 

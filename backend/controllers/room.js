@@ -36,7 +36,7 @@ const getRooms = async (req, res) => {
   try {
     const { _id } = req.session.user;
 
-    const room = await Room.find({ users: _id })
+    const rooms = await Room.find({ users: _id })
       .populate("users")
       .populate("messages");
 
@@ -52,17 +52,14 @@ const getRooms = async (req, res) => {
 // @access  Private
 const getRoom = async (req, res) => {
   try {
-    const user = await User.findOne({ _id: req.session.user });
-
-    if (!user) return res.status(404).send("User not found");
-    if (!req.params.owner_id)
-      return res.status(400).send("Owner id is required");
+    const user = await User.getUser(req.session.user);
+    if (!user) return res.status(404).send("User not found.");
 
     const room = await Room.findOne({ owner: req.params.owner_id });
-    const influencer = await User.findOne({ _id: room.owner });
+    if (!room) return res.status(404).send("Room not found.");
 
-    if (!room) return res.status(404).send("Room not found");
-    if (!influencer) return res.status(404).send("Influencer not found");
+    const influencer = await User.getUser(room.owner);
+    if (!influencer) return res.status(404).send("Influencer not found.");
 
     // If the user is the owner of the room, return the room
     if (user._id === influencer._id) {
@@ -75,6 +72,7 @@ const getRoom = async (req, res) => {
         populate: {
           path: "author",
           model: "User",
+          select: "username displayName avatar _id",
         },
       });
 

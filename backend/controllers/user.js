@@ -4,83 +4,15 @@ const Session = require("../models/Session");
 const Key = require("../models/Key");
 const Wallet = require("../models/Wallet");
 const mongoose = require("mongoose");
+const Transaction = require("../models/Transaction");
 
 const { PublicKey, Keypair, LAMPORTS_PER_SOL } = require("@solana/web3.js");
 const { v4: uuidv4 } = require("uuid");
 
 const { generateKeypair } = require("../utils/cipher");
 const { getBalance } = require("../utils/solana");
-const { getPortfolioValue } = require("../utils/price");
-
-// const migrateUsers = async (req, res) => {
-//   try {
-//     await User.updateMany({}, { $set: { minimumKeys: 1 } });
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
-
-// const migrateUsers = async (req, res) => {
-//   try {
-//     await User.updateMany(
-//       { minKeysLastUpdated: { $exists: false } },
-//       { $set: { minKeysLastUpdated: Date.now() - 24 * 60 * 60 * 1000 } }
-//     );
-//     console.log("done");
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
-
-// const updateKeyQuantities = async (req, res) => {
-//   try {
-//     const keys = await Key.find({});
-
-//     await User.updateMany(
-//       { minKeysLastUpdated: { $exists: false } },
-//       { $set: { minKeysLastUpdated: Date.now() - 24 * 60 * 60 * 1000 } }
-//     );
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
-
-// const valuator = (amountToBuy) => {
-//   for (let i = 0; i < amountToBuy; i++) {
-//     const price =
-//       (supply * Math.pow(supply, 2)) / process.env.BONDED_CURVE_DIVISOR;
-//     supply++;
-//     console.log(price);
-//   }
-// };
-
-// const updatePriceForAllUsers = async (req, res) => {
-//   try {
-//     const users = await User.find({});
-
-//     users.map(async (user) => {
-//       const key = await Key.find({ influencer: user._id });
-
-//       const quantity = key.reduce((a, b) => a + b.quantity, 0);
-
-//       const price =
-//         ((quantity * Math.pow(quantity, 2)) /
-//           process.env.BONDED_CURVE_DIVISOR) *
-//         LAMPORTS_PER_SOL;
-
-//       await User.updateOne(
-//         { _id: user._id },
-//         { $set: { price: price * LAMPORTS_PER_SOL } }
-//       );
-
-//       console.log(user.username, quantity, price * LAMPORTS_PER_SOL);
-//     });
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
-
-// updatePriceForAllUsers();
+const { getTradePrice } = require("../utils/price");
+const { populate } = require("../models/Fee");
 
 // @route   Post /api/user
 // @desc    Manually add a user
@@ -104,6 +36,7 @@ const createUser = async (req, res) => {
       avatar: req.body.avatar,
       followers: req.body.followers,
       claimed: false,
+      price: 62500,
     });
 
     const room = new Room({
@@ -121,25 +54,6 @@ const createUser = async (req, res) => {
       chain: "solana",
       balance: 0,
     });
-
-    user.price = Math.floor(
-      ((1 * Math.pow(1, 2)) / process.env.BONDED_CURVE_DIVISOR) *
-        LAMPORTS_PER_SOL
-    );
-
-    user.holders = [
-      {
-        user: user._id,
-        quantity: 1,
-      },
-    ];
-
-    user.holding = [
-      {
-        key: user._id,
-        quantity: 1,
-      },
-    ];
 
     await wallet.save({ session });
     await room.save({ session });
@@ -173,7 +87,7 @@ const searchUsers = async (req, res) => {
       query.username = { $regex: req.params.username, $options: "i" };
     }
 
-    const users = await User.find(query).sort({ volume: -1 }).limit(20);
+    const users = await User.find(query).sort({ volume: -1 }).limit(50);
 
     return res.status(200).send(users);
   } catch (error) {
@@ -187,20 +101,7 @@ const searchUsers = async (req, res) => {
 // @access  Private
 const getFriends = async (req, res) => {
   try {
-    console.log(req.session);
-    const user = await User.findOne({ _id: req.session.user }).populate(
-      "holding.key"
-    );
-
-    // remove user from friends list
-    const friends = user.holding.filter((friend) => {
-      return friend.key.username !== user.username;
-    });
-
-    // get total value of portfolio
-    const totalValue = friends.reduce((acc, friend) => {
-      return acc + friend.quantity * friend.key.price;
-    }, 0);
+    const { friends, totalValue } = await User.getFriends(req.session.user);
 
     return res.status(200).send({ friends, totalValue });
   } catch (error) {
@@ -214,9 +115,7 @@ const getFriends = async (req, res) => {
 // @access  Public
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findOne({
-      $or: [{ _id: req.params.id }, { username: req.params.id }],
-    });
+    const user = await User.getUser(req.params.id);
 
     if (!user) {
       return res.status(404).send("User not found");
@@ -234,12 +133,10 @@ const getUserById = async (req, res) => {
 // @access  Private
 const getcurrentUser = async (req, res) => {
   try {
-    const currentUser = req.session.user;
-
-    const user = await User.findOne({ _id: currentUser });
+    const user = await User.getUser(req.session.user);
 
     if (!user) {
-      return res.status(404).send("User not found");
+      return res.status(511).send("User not found");
     }
 
     return res.status(200).send(user);
@@ -254,9 +151,13 @@ const getcurrentUser = async (req, res) => {
 // @access  Private
 const getTopUsers = async (req, res) => {
   try {
-    const users = await User.find({}).sort({ volume: -1 }).limit(20);
+    const users = await User.getTopUsers();
 
-    res.json(users);
+    if (!users) {
+      return res.status(404).send("Users not found.");
+    }
+
+    return res.status(200).send(users);
   } catch (error) {
     console.log(error);
     return res.status(500).send("Server error");
@@ -268,18 +169,18 @@ const getTopUsers = async (req, res) => {
 // @access  Private
 const updateUser = async (req, res) => {
   try {
-    const currentUser = req.session.user;
-
-    const user = await User.findOne({ _id: currentUser }).select("-privateKey");
+    const user = await User.getUser(req.session.user);
 
     if (!user) {
-      return res.status(404).send("User not found");
+      return res.status(511).send("User not found");
     }
 
     const query = {};
 
     if (req.body.minimumKeys) {
-      if (req.body.minimumKeys < 0) {
+      let minimumKeys = Number(req.body.minimumKeys);
+
+      if (minimumKeys < 0) {
         return res.status(401).send("Minimum amount can not be less than 0.");
       }
 
@@ -291,12 +192,11 @@ const updateUser = async (req, res) => {
           .send("You may only update minimum key amounts once per day.");
       }
 
-      query.minimumKeys = req.body.minimumKeys;
-
+      query.minimumKeys = minimumKeys;
       query.minKeysLastUpdated = Date.now();
     }
 
-    await User.updateOne({ _id: currentUser }, { $set: query });
+    await User.updateOne({ _id: user._id }, { $set: query });
 
     return res.status(200).send(user);
   } catch (error) {

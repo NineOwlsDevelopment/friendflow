@@ -13,10 +13,32 @@ const ExpressMongoSanitize = require("express-mongo-sanitize");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const path = require("path");
 const { updateCoinPrices } = require("./utils/price");
-const { subscribeAccountChanges } = require("./utils/solana");
+// require("./utils/subscriptions");
 
 const User = require("./models/User");
 const Room = require("./models/Room");
+const Fee = require("./models/Fee");
+
+const getFee = async () => {
+  try {
+    const fee = await Fee.findOne({});
+
+    if (!fee) {
+      const newFee = new Fee({
+        total: 0,
+      });
+
+      await newFee.save();
+    }
+
+    return fee;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+getFee();
 
 const originList = [process.env.CLIENT_URL];
 const PORT = process.env.PORT || 5000;
@@ -124,7 +146,7 @@ if (process.env.NODE_ENV === "production") {
 
 const getUser = async (userID) => {
   try {
-    const user = await User.findOne({ _id: userID });
+    const user = await User.getUser(userID);
 
     if (!user) {
       throw new Error("User not found");
@@ -139,9 +161,8 @@ const getUser = async (userID) => {
 
 // WebSocket routing
 io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
-
-  console.log("Number of connections:", io.engine.clientsCount);
+  // console.log("A user connected:", socket.id);
+  // console.log("Number of connections:", io.engine.clientsCount);
 
   socket.on("join_room", (room_id) => {
     getUser(socket.request.session.user).then(async (user) => {
@@ -158,8 +179,8 @@ io.on("connection", (socket) => {
         return socket.disconnect();
       }
 
-      console.log("user from socket:", user._id);
-      console.log("A user joined room:", room_id);
+      // console.log("user from socket:", user._id);
+      // console.log("A user joined room:", room_id);
       socket.join(room_id);
     });
   });

@@ -9,7 +9,6 @@ const Key = require("../models/Key");
 const getTransactions = async (req, res) => {
   try {
     const transactions = await Transaction.find()
-      .limit(20)
       .sort({ createdAt: -1 })
       .populate("user", ["username", "displayName", "_id", "avatar"])
       .populate("influencer", [

@@ -29,10 +29,6 @@ const transactionSchema = new Schema(
       type: Number,
       default: 0,
     },
-    txid: {
-      type: String,
-      default: "",
-    },
   },
   { timestamps: true }
 );

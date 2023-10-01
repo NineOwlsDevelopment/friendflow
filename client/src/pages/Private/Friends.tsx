@@ -54,18 +54,17 @@ export default function Friends() {
                 <UserCardContainer>
                     {friends.map((friend: any) => (
                         <FriendCard
-                            key={friend.key._id}
-                            _id={friend.key._id}
-                            avatar={friend.key.avatar}
-                            username={friend.key.username}
-                            displayName={friend.key.displayName}
-                            followers={friend.key.followers}
-                            marketCap={friend.key.marketCap}
-                            volume={friend.key.volume}
-                            earnings={friend.key.earnings}
-                            price={friend.key.price}
-                            supply={friend.key.supply}
-                            claimed={friend.key.claimed}
+                            key={friend.user._id}
+                            _id={friend.user._id}
+                            avatar={friend.user.avatar}
+                            username={friend.user.username}
+                            displayName={friend.user.displayName}
+                            followers={friend.user.followers}
+                            volume={friend.user.volume}
+                            earnings={friend.user.earnings}
+                            price={friend.user.price}
+                            supply={friend.user.supply}
+                            claimed={friend.user.claimed}
                             currentlyHolding={friend.quantity}
                         />
                     ))}

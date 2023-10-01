@@ -6,6 +6,8 @@ import { clusterApiUrl } from '@solana/web3.js';
 import React, { FC, ReactNode, useMemo } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
@@ -24,6 +26,20 @@ import Activity from './pages/Private/Activity';
 require('@solana/wallet-adapter-react-ui/styles.css');
 
 const App: FC = () => {
+    axios.interceptors.response.use(
+        (response) => {
+            return response;
+        },
+        (error) => {
+            if (error.response.status === 511) {
+                localStorage.clear();
+                window.location.reload();
+            }
+
+            return Promise.reject(error);
+        }
+    );
+
     return (
         <Context>
             <Content />

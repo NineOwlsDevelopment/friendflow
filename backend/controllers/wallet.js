@@ -9,9 +9,14 @@ const {
   Keypair,
 } = require("@solana/web3.js");
 const bs58 = require("bs58");
+const mongoose = require("mongoose");
+
 const { getCoinPrice } = require("../utils/price");
 const { getBalance } = require("../utils/solana");
 const { decryptPrivateKey } = require("../utils/cipher");
+const queue = require("../utils/queue");
+
+const Withdrawal = require("../models/Withdrawal");
 
 // @route   POST api/wallet
 // @desc    Create a wallet
@@ -29,48 +34,18 @@ const createWallet = async (req, res) => {
   }
 };
 
-// @route   GET api/wallet
-// @desc    Get all wallets
-// @access  Private
-const getWallets = async (req, res) => {
-  try {
-    const passcode = req.body.passcode;
-
-    if (passcode !== process.env.PASSCODE) {
-      return res.status(401).send("Unauthorized");
-    }
-  } catch (error) {
-    console.log(error);
-    return res.status(500).send("Server error");
-  }
-};
-
 // @route   GET api/wallet/
 // @desc    Get current user wallet
 // @access  Private
 const getWallet = async (req, res) => {
   try {
-    const currentUser = req.session.user;
-
-    const user = await User.findOne({ _id: currentUser });
+    const user = await User.findOne({ _id: req.session.user });
 
     if (!user) {
-      return res.status(404).send("User not found");
+      return res.status(511).send("User not found");
     }
 
-    const wallet = await Wallet.findOne({ user: user._id }).select(
-      "-privateKey"
-    );
-
-    if (!wallet) {
-      return res.status(404).send("Wallet not found");
-    }
-
-    const balance = await getBalance(wallet.address);
-
-    wallet.balance = balance;
-
-    await wallet.save();
+    const wallet = await Wallet.findByUser(user._id);
 
     return res.status(200).send(wallet);
   } catch (error) {
@@ -83,87 +58,93 @@ const getWallet = async (req, res) => {
 // @desc    Withdraw from wallet
 // @access  Private
 const withdraw = async (req, res) => {
-  try {
-    const currentUser = req.session.user;
+  const processWithdrawal = async () => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    const user = await User.findOne({ _id: currentUser });
+    try {
+      const user = await User.getUser(req.session.user);
+      if (!user) throw { status: 511, data: "User not found." };
 
-    if (!user) {
-      return res.status(404).send("User not found");
+      const wallet = await Wallet.findByUser(user._id);
+      if (!wallet) throw { status: 511, data: "User not found." };
+
+      let amount = Number(req.body.amount) * LAMPORTS_PER_SOL;
+      let address = req.body.address;
+
+      if (!amount || !address) {
+        throw { status: 400, data: "Please enter all fields." };
+      }
+
+      if (amount < 0.01) throw { status: 400, data: "Invalid amount." };
+      if (isNaN(amount)) throw { status: 400, data: "Invalid amount." };
+      if (wallet.balance < amount) {
+        throw { status: 400, data: "Insufficient balance." };
+      }
+
+      const pk = decryptPrivateKey(process.env.HOT_WALLET_SECRET);
+      const privateKey = Keypair.fromSecretKey(new Uint8Array(bs58.decode(pk)));
+
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: new PublicKey(process.env.HOT_WALLET_ADDRESS),
+          toPubkey: new PublicKey(address),
+          lamports: Number(amount) - 5000,
+        })
+      );
+
+      const connection = new Connection(process.env.SOLANA_RPC);
+      const { blockhash } = await connection.getRecentBlockhash();
+
+      transaction.recentBlockhash = blockhash;
+      transaction.sign(privateKey);
+      const rawTransaction = transaction.serialize();
+
+      const signature = await connection.sendRawTransaction(rawTransaction, {
+        skipPreflight: false,
+      });
+
+      wallet.balance = Number(wallet.balance) - amount;
+      await wallet.save({ session });
+
+      const withdrawal = new Withdrawal({
+        user: user._id,
+        amount: amount,
+        address: address,
+        txid: signature,
+      });
+
+      await withdrawal.save({ session });
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return {
+        status: 200,
+        data: {
+          signature,
+          wallet,
+        },
+      };
+    } catch (error) {
+      console.log(error);
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(500).send("Server error");
     }
+  };
 
-    const wallet = await Wallet.findOne({ user: user._id });
-
-    if (!wallet) {
-      return res.status(404).send("Wallet not found");
-    }
-
-    const { amount, address } = req.body;
-
-    if (!amount || !address) {
-      return res.status(400).send("Please enter all fields");
-    }
-
-    if (amount <= 0) {
-      return res.status(400).send("Invalid amount");
-    }
-
-    if (isNaN(amount)) {
-      throw { status: 400, data: "Invalid amount." };
-    }
-
-    const balance = await getBalance(wallet.address);
-
-    if (balance < amount) {
-      return res.status(400).send("Insufficient balance");
-    }
-
-    const pk = decryptPrivateKey(wallet.privateKey);
-
-    const privateKey = Keypair.fromSecretKey(new Uint8Array(bs58.decode(pk)));
-
-    const transaction = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: new PublicKey(wallet.address),
-        toPubkey: address,
-        lamports: Number(amount * LAMPORTS_PER_SOL),
-      })
-    );
-
-    const connection = new Connection(process.env.SOLANA_RPC);
-
-    const { blockhash } = await connection.getRecentBlockhash();
-
-    transaction.recentBlockhash = blockhash;
-    transaction.sign(privateKey);
-    const rawTransaction = transaction.serialize();
-
-    const signature = await connection.sendRawTransaction(rawTransaction, {
-      skipPreflight: false,
+  queue
+    .add(processWithdrawal)
+    .then((result) => {
+      res.status(result.status).send(result.data);
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(error.status || 500).send(error.data || "Server error");
     });
-
-    console.log(signature);
-
-    wallet.balance = balance - amount;
-
-    await wallet.save();
-
-    // remove private key from response
-    wallet.privateKey = undefined;
-
-    return res.status(200).send({
-      signature,
-      wallet,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).send("Server error");
-  }
 };
 
-// @route  GET api/wallet/export
-// @desc   Get private key
-// @access Private
 const getPrivateKey = async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.session.user });
@@ -189,7 +170,6 @@ const getPrivateKey = async (req, res) => {
 
 module.exports = {
   createWallet,
-  getWallets,
   getWallet,
   withdraw,
   getPrivateKey,

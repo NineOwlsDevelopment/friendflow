@@ -3,6 +3,7 @@ const Key = require("../models/Key");
 const Wallet = require("../models/Wallet");
 const Transaction = require("../models/Transaction");
 const mongoose = require("mongoose");
+const Fee = require("../models/Fee");
 const queue = require("../utils/queue");
 
 const {
@@ -17,17 +18,26 @@ const {
 const bs58 = require("bs58");
 
 const { getBalance, createTransfer } = require("../utils/solana");
-const { decryptPrivateKey, encryptPrivateKey } = require("../utils/cipher");
-const { getTradePrice } = require("../utils/price");
+const { getTradePrice, getPrice } = require("../utils/price");
 
-// const newKeyPair = Keypair.fromSecretKey(
-//   new Uint8Array([
-//   ])
-// );
+const setFee = async (amount) => {
+  try {
+    const fee = await Fee.findOne({});
 
-// console.log(newKeyPair);
-// console.log(newKeyPair.publicKey.toBase58());
-// console.log(bs58.encode(newKeyPair.secretKey));
+    if (!fee) {
+      console.log("No fee found");
+      return;
+    }
+
+    fee.total += amount;
+
+    await fee.save();
+    return fee;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
 
 // @route   GET api/trade/estimate/:side/:amount/:influencer
 // @desc    Get estimate cost of trade
@@ -38,15 +48,13 @@ const getTradeEstimate = async (req, res) => {
     const amount = req.params.amount;
     const influencer = req.params.influencer;
 
-    const { price, supply } = await getTradePrice(side, amount, influencer);
+    let price = await getTradePrice(side, amount, influencer);
 
-    console.log(price, supply);
-
-    if (!price || !supply) {
-      return res.status(400).send("Invalid request.");
+    if (price <= 0 || isNaN(price)) {
+      price = 0;
     }
 
-    return res.status(200).send({ price });
+    return res.status(200).send({ price: price });
   } catch (error) {
     console.log(error);
     return res.status(500).send("Server error");
@@ -57,6 +65,9 @@ const getTradeEstimate = async (req, res) => {
 // @desc    Create a buy trade
 // @access  Private
 const createBuy = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   const processBuy = async () => {
     try {
       const side = "buy";
@@ -66,60 +77,36 @@ const createBuy = async (req, res) => {
         throw { status: 400, data: "Missing required fields." };
       }
 
-      if (amount <= 0 || amount > 100) {
-        throw { status: 400, data: "Invalid amount." };
+      if (amount < 0.001 || amount > 100) {
+        throw { status: 400, data: "Amount must be between 0.001 and 100." };
       }
 
-      if (isNaN(amount)) {
-        throw { status: 400, data: "Invalid amount." };
-      }
+      if (isNaN(amount)) throw { status: 400, data: "Invalid amount." };
 
-      const user = await User.findOne({ _id: req.session.user });
-      const wallet = await Wallet.findOne({ user: user._id, chain: "solana" });
-      const influencer = await User.findOne({ _id: req.body.influencer });
-      const influencerWallet = await Wallet.findOne({
-        user: req.body.influencer,
-        chain: "solana",
-      });
+      const user = await User.getUser(req.session.user);
+      if (!user) throw { status: 511, data: "User not found" };
 
-      if (!user || !wallet || !influencer || !influencerWallet) {
-        throw { status: 404, data: "User not found" };
-      }
+      const wallet = await Wallet.findByUser(user._id);
+      if (!wallet) throw { status: 511, data: "Wallet not found" };
 
-      const { price, supply } = await getTradePrice(
-        side,
-        amount,
-        influencer._id
-      );
+      const influencer = await User.getUser(req.body.influencer);
+      if (!influencer) throw { status: 404, data: "Influencer not found" };
 
-      const rent = 0.006 * LAMPORTS_PER_SOL;
-      const fee1 = Math.ceil(price * 0.1 * 0.5 * LAMPORTS_PER_SOL + rent);
-      const fee2 = Math.ceil(price * 0.1 * 0.5 * LAMPORTS_PER_SOL - rent);
-      const lamPrice = Math.ceil(price * LAMPORTS_PER_SOL);
+      const influencerWallet = await Wallet.findByUser(influencer._id);
+      if (!influencerWallet) throw { status: 404, data: "Wallet 2 not found" };
 
-      const accountBalance = await getBalance(wallet.address);
+      const price = Number(await getTradePrice(side, amount, influencer._id));
+      const fee1 = Math.ceil(price * 0.1 * 0.5); // 10% of price, 50% to influencer
+      const fee2 = Math.ceil(price * 0.1 * 0.5); // 10% of price, 50% to platform
+      const total = Number(price + fee1 + fee2);
 
-      if (accountBalance < lamPrice + fee1 + fee2) {
+      // console.log(total);
+      // console.log(price, fee1, fee2);
+      // console.log(wallet.balance, fee1, fee2);
+      // console.log(user._id, influencer._id);
+
+      if (wallet.balance < total) {
         throw { status: 400, data: "Insufficient balance." };
-      }
-
-      const tx = await createTransfer(wallet, [
-        {
-          address: influencerWallet.address, // Fee paid to influencer
-          amount: fee1,
-        },
-        {
-          address: process.env.FEE_WALLET_ADDRESS, // Fee paid to project
-          amount: fee2,
-        },
-        {
-          address: process.env.HOT_WALLET_ADDRESS, // Project's hot wallet
-          amount: lamPrice,
-        },
-      ]);
-
-      if (!tx) {
-        throw { status: 400, data: "Transaction failed." };
       }
 
       // check if buyer is already a holder in the influencer holders array
@@ -127,6 +114,11 @@ const createBuy = async (req, res) => {
         (holder) => holder.user.toString() === user._id.toString()
       );
 
+      const isHolding = user.holding.find(
+        (holding) => holding.user.toString() === influencer._id.toString()
+      );
+
+      // if buyer is already a holder, add to their quantity else add them to the holders array
       if (isHolder) {
         isHolder.quantity += Number(amount);
       } else {
@@ -136,22 +128,24 @@ const createBuy = async (req, res) => {
         });
       }
 
-      // check if buyer is already holding in the user jolding array
-      const isHolding = user.holding.find(
-        (holding) => holding.key.toString() === influencer._id.toString()
-      );
-
       if (isHolding) {
         isHolding.quantity += Number(amount);
       } else {
         user.holding.push({
-          key: influencer._id,
+          user: influencer._id,
           quantity: amount,
         });
       }
 
-      influencer.volume += price * LAMPORTS_PER_SOL;
-      influencer.earnings += fee1;
+      influencer.volume += Number(price);
+
+      if (wallet.user.toString() === influencerWallet.user.toString()) {
+        wallet.balance -= Number(price);
+      } else {
+        wallet.balance -= Number(total);
+        influencerWallet.balance += Number(fee1);
+        influencer.earnings += Number(fee1);
+      }
 
       const transaction = new Transaction({
         user: user._id,
@@ -159,27 +153,31 @@ const createBuy = async (req, res) => {
         type: side,
         quantity: amount,
         total: price,
-        txid: tx,
       });
 
-      influencer.price = Math.floor(
-        ((supply * Math.pow(supply, 2)) / process.env.BONDED_CURVE_DIVISOR) *
-          LAMPORTS_PER_SOL
-      );
+      const circulating = influencer.holders.reduce((acc, holder) => {
+        return acc + holder.quantity;
+      }, 0);
 
-      await user.save();
-      await wallet.save();
-      await transaction.save();
-      await influencer.save();
+      influencer.price = getPrice(Number(circulating) + 1, 1);
+
+      await setFee(fee2);
+
+      await user.save({ session });
+      await wallet.save({ session });
+      await transaction.save({ session });
+      await influencer.save({ session });
+      await influencerWallet.save({ session });
+
+      await session.commitTransaction();
+      session.endSession();
 
       return { status: 200, data: influencer };
     } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
       console.log(error);
-      if (error.status && error.data) {
-        throw error;
-      } else {
-        throw { status: 500, data: "Server error" };
-      }
+      throw { status: 500, data: "Server error" };
     }
   };
 
@@ -198,45 +196,40 @@ const createBuy = async (req, res) => {
 // @desc    Create a sell trade
 // @access  Private
 const createSell = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   const processSell = async () => {
     try {
       const side = "sell";
-      const amount = req.body.amount;
+      const amount = Number(req.body.amount);
 
       if (!amount || !req.body.influencer) {
         throw { status: 400, data: "Missing required fields." };
       }
 
-      if (amount <= 0 || amount > 100) {
-        throw { status: 400, data: "Invalid amount." };
+      if (amount < 0.001 || amount > 100) {
+        throw { status: 400, data: "Amount must be between 0.001 and 100." };
       }
 
-      if (isNaN(amount)) {
-        throw { status: 400, data: "Invalid amount." };
-      }
+      if (isNaN(amount)) throw { status: 400, data: "Invalid amount." };
 
-      const user = await User.findOne({ _id: req.session.user });
-      const wallet = await Wallet.findOne({ user: user._id, chain: "solana" });
-      const influencer = await User.findOne({ _id: req.body.influencer });
-      const influencerWallet = await Wallet.findOne({
-        user: req.body.influencer,
-        chain: "solana",
-      });
+      const user = await User.getUser(req.session.user);
+      if (!user) throw { status: 511, data: "User not found" };
 
-      if (!user || !wallet || !influencer || !influencerWallet) {
-        throw { status: 404, data: "User not found" };
-      }
+      const wallet = await Wallet.findByUser(user._id);
+      if (!wallet) throw { status: 511, data: "Wallet not found" };
 
-      const { price, supply } = await getTradePrice(
-        side,
-        amount,
-        influencer._id
-      );
-      const rent = 0.006 * LAMPORTS_PER_SOL;
-      const fee1 = Math.ceil(price * 0.1 * 0.5 * LAMPORTS_PER_SOL + rent);
-      const fee2 = Math.ceil(price * 0.1 * 0.5 * LAMPORTS_PER_SOL - rent);
-      const feeTotal = fee1 + fee2;
-      const lamPrice = Math.ceil(price * LAMPORTS_PER_SOL - feeTotal);
+      const influencer = await User.getUser(req.body.influencer);
+      if (!influencer) throw { status: 404, data: "Influencer not found" };
+
+      const influencerWallet = await Wallet.findByUser(influencer._id);
+      if (!influencerWallet) throw { status: 404, data: "Wallet 2 not found" };
+
+      const price = Number(await getTradePrice(side, amount, influencer._id));
+      const fee1 = Math.ceil(price * 0.1 * 0.5); // 10% of price, 50% to influencer
+      const fee2 = Math.ceil(price * 0.1 * 0.5); // 10% of price, 50% to platform
+      const total = Number(price - fee1 - fee2);
 
       const keysOwned = influencer.holders.find((holder) => {
         return holder.user.toString() === user._id.toString();
@@ -246,46 +239,29 @@ const createSell = async (req, res) => {
         throw { status: 400, data: "Insufficient balance." };
       }
 
-      console.log(keysOwned, amount);
-
-      const from = {
-        address: process.env.HOT_WALLET_ADDRESS,
-        privateKey: process.env.HOT_WALLET_SECRET,
-      };
-
-      const tx = await createTransfer(from, [
-        {
-          address: influencerWallet.address, // Fee paid to influencer
-          amount: fee1,
-        },
-        {
-          address: process.env.FEE_WALLET_ADDRESS, // Fee paid to project
-          amount: fee2,
-        },
-        {
-          address: wallet.address, // Sellers wallet
-          amount: lamPrice,
-        },
-      ]);
-
-      if (!tx) {
-        throw { status: 400, data: "Transaction failed." };
-      }
-
       const holder = influencer.holders.find(
         (holder) => holder.user.toString() === user._id.toString()
       );
 
-      holder.quantity -= Number(amount);
-
       const holding = user.holding.find(
-        (holding) => holding.key.toString() === influencer._id.toString()
+        (holding) => holding.user.toString() === influencer._id.toString()
       );
 
-      holding.quantity -= Number(amount);
+      if (!holder || !holding) {
+        throw { status: 400, data: "Insufficient balance." };
+      }
 
-      influencer.volume += price * LAMPORTS_PER_SOL;
-      influencer.earnings += fee1;
+      holder.quantity -= Number(amount);
+      holding.quantity -= Number(amount);
+      influencer.volume += price;
+
+      if (wallet.user.toString() === influencerWallet.user.toString()) {
+        wallet.balance += total;
+      } else {
+        wallet.balance += total;
+        influencerWallet.balance += fee1;
+        influencer.earnings += fee1;
+      }
 
       const transaction = new Transaction({
         user: user._id,
@@ -293,21 +269,43 @@ const createSell = async (req, res) => {
         type: side,
         quantity: amount,
         total: price,
-        txid: tx,
       });
 
-      influencer.price = Math.floor(
-        ((supply * Math.pow(supply, 2)) / process.env.BONDED_CURVE_DIVISOR) *
-          LAMPORTS_PER_SOL
-      );
+      const circulating = influencer.holders.reduce((acc, holder) => {
+        return acc + holder.quantity;
+      }, 0);
 
-      await user.save();
-      await wallet.save();
-      await transaction.save();
-      await influencer.save();
+      influencer.price = getPrice(Number(circulating + 1), 1);
+
+      // if holder quantity is 0, remove from holders array
+      if (holder.quantity === 0) {
+        influencer.holders = influencer.holders.filter((holder) => {
+          return holder.user.toString() !== user._id.toString();
+        });
+      }
+
+      // if holding quantity is 0, remove from holding array
+      if (holding.quantity === 0) {
+        user.holding = user.holding.filter((holding) => {
+          return holding.user.toString() !== influencer._id.toString();
+        });
+      }
+
+      await setFee(fee2);
+
+      await user.save({ session });
+      await wallet.save({ session });
+      await transaction.save({ session });
+      await influencer.save({ session });
+      await influencerWallet.save({ session });
+
+      await session.commitTransaction();
+      session.endSession();
 
       return { status: 200, data: influencer };
     } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
       console.log(error);
       throw { status: 500, data: "Server error" };
     }

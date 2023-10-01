@@ -25,11 +25,6 @@ export default function WithdrawModal() {
         address: '',
     });
 
-    // const [formData, setFormData] = React.useState({
-    //     amount: 0.01,
-    //     address: '6K4ZiGkpN3PpTKd9WUf5WiNWsmSmkhk7XqJPzjRUy449',
-    // });
-
     const handleClose = () => {
         setOpen(false);
         setTx('');
@@ -45,8 +40,8 @@ export default function WithdrawModal() {
 
     const handleWithdraw = async () => {
         try {
-            if (formData.amount <= 0) {
-                toast.error('Amount must be greater than 0.');
+            if (formData.amount < 0.01) {
+                toast.error('Amount must be greater than 0.01.');
                 return;
             }
 
@@ -55,7 +50,7 @@ export default function WithdrawModal() {
                 return;
             }
 
-            setPending(true);
+            // setPending(true);
             const response = await axios.post(
                 `${process.env.REACT_APP_SERVER_URL}/wallet/withdraw`,
                 {
@@ -69,12 +64,12 @@ export default function WithdrawModal() {
 
             if (response.data) {
                 setTx(response.data.signature);
-                wallet.setWallet(response.data.wallet);
+                wallet.setBalance(response.data.wallet.balance);
                 localStorage.setItem('wallet', JSON.stringify(response.data));
             }
         } catch (err: any) {
             console.log(err);
-            toast.error(err.response.data.message);
+            toast.error(err.response.data);
         } finally {
             setTimeout(() => {
                 setPending(false);
@@ -137,18 +132,6 @@ export default function WithdrawModal() {
                                 {!tx && (
                                     <InputWrapper>
                                         <InputContainer>
-                                            <InputLabel>Amount</InputLabel>
-                                            <Input
-                                                onChange={handleChange}
-                                                name="amount"
-                                                value={formData.amount || ''}
-                                                type="number"
-                                                placeholder="Amount of SOL to withdraw from your wallet."
-                                                autoComplete="off"
-                                            />
-                                        </InputContainer>
-
-                                        <InputContainer>
                                             <InputLabel>Address</InputLabel>
                                             <Input
                                                 onChange={handleChange}
@@ -156,6 +139,18 @@ export default function WithdrawModal() {
                                                 value={formData.address}
                                                 type="text"
                                                 placeholder="Address you want the SOL sent to."
+                                                autoComplete="off"
+                                            />
+                                        </InputContainer>
+
+                                        <InputContainer>
+                                            <InputLabel>Amount</InputLabel>
+                                            <Input
+                                                onChange={handleChange}
+                                                name="amount"
+                                                value={formData.amount || ''}
+                                                type="number"
+                                                placeholder="Amount of SOL to withdraw from your wallet."
                                                 autoComplete="off"
                                             />
                                         </InputContainer>

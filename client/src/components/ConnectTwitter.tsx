@@ -16,7 +16,6 @@ export default function ConnectTwitter() {
         axios
             .get(`${process.env.REACT_APP_SERVER_URL}/auth/twitter-login`, { withCredentials: true })
             .then((res) => {
-                console.log(res);
                 setTwitterUrl(res.data);
             })
             .catch((err) => {

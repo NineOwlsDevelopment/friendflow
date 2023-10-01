@@ -66,6 +66,8 @@ export default function Account() {
             }
         } catch (err) {
             console.log(err);
+            localStorage.clear();
+            navigate('/');
             toast.error('Error logging out');
         }
     };
@@ -387,7 +389,7 @@ export default function Account() {
                         <span>Export Wallet</span>
                     </ExportButton> */}
 
-                    <ExportModal />
+                    {/* <ExportModal /> */}
 
                     <LogoutButton
                         onClick={() => {
@@ -692,7 +694,7 @@ const ExportSection = styled.div`
     flex-direction: column;
     justify-content: center;
     gap: 20px;
-    min-height: 150px;
+    min-height: 160px;
     height: fit-content;
     background-color: #d1b48c;
     border-bottom: 1px solid #e6e6e6;

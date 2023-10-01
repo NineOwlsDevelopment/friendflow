@@ -53,16 +53,15 @@ const userSchema = new Schema(
       enum: ["socialite", "influencer", "celebrity", "legend"],
       default: "socialite",
     },
-    price: {
-      type: Number,
-      default: 0,
-      required: true,
-    },
     volume: {
       type: Number,
       default: 0,
     },
     earnings: {
+      type: Number,
+      default: 0,
+    },
+    price: {
       type: Number,
       default: 0,
     },
@@ -96,7 +95,7 @@ const userSchema = new Schema(
     ],
     holding: [
       {
-        key: {
+        user: {
           type: String,
           ref: "User",
           required: true,
@@ -128,10 +127,84 @@ const userSchema = new Schema(
       transform: (_, ret) => {
         delete ret.__v;
         delete ret.email;
+        delete ret.updatedAt;
+        delete ret.createdAt;
+        delete ret.marketCap;
+        delete ret.minKeysLastUpdated;
       },
     },
   }
 );
+
+// add static method for getting user
+userSchema.statics.getUser = async function (data) {
+  const user = await this.findOne({
+    $or: [{ _id: data }, { username: data }],
+  }).select({
+    username: 1,
+    displayName: 1,
+    avatar: 1,
+    rank: 1,
+    minimumKeys: 1,
+    followers: 1,
+    volume: 1,
+    claimed: 1,
+    holders: 1,
+    holding: 1,
+    price: 1,
+    earnings: 1,
+  });
+
+  return user;
+};
+
+// add static method for getting user
+userSchema.statics.getTopUsers = async function () {
+  const users = await this.find({}).sort({ volume: -1 }).limit(50).select({
+    username: 1,
+    displayName: 1,
+    avatar: 1,
+    followers: 1,
+    volume: 1,
+    claimed: 1,
+    holders: 1,
+    holding: 1,
+    price: 1,
+  });
+
+  return users;
+};
+
+// get user friends
+userSchema.statics.getFriends = async function (data) {
+  const user = await this.findOne({ _id: data }).populate("holding.user", {
+    username: 1,
+    displayName: 1,
+    avatar: 1,
+    followers: 1,
+    volume: 1,
+    claimed: 1,
+    holders: 1,
+    holding: 1,
+    price: 1,
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  // remove user from friends list
+  const friends = user.holding.filter((friend) => {
+    return friend.user.username !== user.username;
+  });
+
+  // get total value of portfolio
+  const totalValue = friends.reduce((acc, friend) => {
+    return acc + friend.quantity * friend.user.price;
+  }, 0);
+
+  return { friends, totalValue };
+};
 
 const User = model("User", userSchema);
 

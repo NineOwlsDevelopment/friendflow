@@ -9,6 +9,7 @@ import { BiSolidUpArrowAlt, BiSolidDownArrowAlt } from 'react-icons/bi';
 
 import ActionNav from '../../components/Private/ActionNav';
 import BottomNav from '../../components/Private/BottomNav';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 export default function Activity() {
     const navigate = useNavigate();
@@ -62,9 +63,9 @@ export default function Activity() {
                             </div>
 
                             {/* open solscan on click of the eye */}
-                            <span onClick={() => window.open(`https://solscan.io/tx/${transaction.txid}`, '_blank')}>
+                            {/* <span onClick={() => window.open(`https://solscan.io/tx/${transaction.txid}`, '_blank')}>
                                 <AiFillEye />
-                            </span>
+                            </span> */}
                         </TransactionCardTop>
 
                         <TransactionCardMiddle>
@@ -161,7 +162,7 @@ export default function Activity() {
                                             color: '#d1b48c',
                                         }}
                                     >
-                                        {transaction.total.toFixed(4)}
+                                        {(transaction.total / LAMPORTS_PER_SOL).toFixed(8)}
                                     </span>{' '}
                                     <span>SOL</span>
                                 </div>

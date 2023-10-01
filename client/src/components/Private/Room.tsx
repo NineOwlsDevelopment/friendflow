@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { RiSendPlane2Fill } from 'react-icons/ri';
 import { AiFillLock } from 'react-icons/ai';
+import PropTypes from 'prop-types';
 
 import socketService from '../../utils/socketService';
 import axios from 'axios';
@@ -14,7 +15,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 import TradeModal from '../../components/Private/TradeModal';
 
 interface Message {
-    _id: string;
+    _id: string | undefined;
+    id: string | undefined;
     author: { _id: string; username: string; displayName: string; avatar: string };
     room: string;
     body: string;
@@ -31,6 +33,7 @@ interface Room {
 }
 
 export default function Room() {
+    const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
     const socket = socketService.getSocket();
 
@@ -87,43 +90,6 @@ export default function Room() {
         }
     };
 
-    const getRoom = async () => {
-        try {
-            const response = await axios.get(`${process.env.REACT_APP_SERVER_URL}/room/${profile._id || id}`, {
-                withCredentials: true,
-            });
-
-            setRoom(response.data);
-
-            setHasAccess(true);
-
-            setTimeout(() => {
-                setPending(false);
-            }, 1000);
-        } catch (err: any) {
-            switch (err.response.status) {
-                case 404:
-                    console.log('room not found');
-                    setHasAccess(false);
-
-                    break;
-                case 401:
-                    setHasAccess(false);
-
-                    setTimeout(() => {
-                        setPending(false);
-                    }, 1000);
-                    break;
-                default:
-                    console.log(err);
-                    setTimeout(() => {
-                        setPending(false);
-                    }, 1000);
-                    break;
-            }
-        }
-    };
-
     const handleDisplayDate = (date: string) => {
         const now = new Date().getTime();
         const tradeDate = new Date(date).getTime();
@@ -143,8 +109,26 @@ export default function Room() {
     };
 
     useEffect(() => {
-        getRoom();
-    }, [profile]);
+        setPending(true);
+
+        axios
+            .get(`${process.env.REACT_APP_SERVER_URL}/room/${id}`, {
+                withCredentials: true,
+            })
+            .then((response) => {
+                setRoom(response.data);
+                setHasAccess(true);
+            })
+            .catch((err: any) => {
+                console.log(err);
+                setHasAccess(false);
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setPending(false);
+                }, 1000);
+            });
+    }, [profile, id]);
 
     // join room
     useEffect(() => {
@@ -152,7 +136,6 @@ export default function Room() {
 
         socket.connect();
         socket.emit('join_room', room._id);
-
         socket.on('new_message', (message: any) => {
             setRoom((prevRoom) => ({
                 ...prevRoom,
@@ -222,8 +205,8 @@ export default function Room() {
             {hasAccess && !pending && (
                 <Container>
                     <ChatArea ref={containerRef}>
-                        {room?.messages?.map((message) => (
-                            <ChatMessage key={message._id} author={message.author._id} user={user?._id}>
+                        {room.messages.map((message) => (
+                            <ChatMessage key={message?.id} author={message.author._id} user={user?._id}>
                                 <ChatUserDiv>
                                     {message.author._id === user?._id && (
                                         <>
@@ -231,7 +214,11 @@ export default function Room() {
                                                 {message.body}
                                             </ChatMessageText>
 
-                                            <ChatMessageImage src={message.author.avatar} alt="" />
+                                            <ChatMessageImage
+                                                onClick={() => navigate(`/a/user/${message.author._id}`)}
+                                                src={message.author.avatar}
+                                                alt=""
+                                            />
                                         </>
                                     )}
 
@@ -291,6 +278,7 @@ const ChatArea = styled.div`
     gap: 30px;
     overflow: auto;
     padding: 10px 20px;
+    margin-top: 10vh;
 
     /* hide scroll bar */
     &::-webkit-scrollbar {
@@ -357,7 +345,12 @@ const ChatMessageImage = styled.img`
     border-radius: 50%;
 `;
 
-const ChatMessage = styled.div<{ author: string; user: string }>`
+interface ChatMessageProps {
+    author: string;
+    user: string;
+}
+
+const ChatMessage = styled.div<ChatMessageProps>`
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -366,7 +359,7 @@ const ChatMessage = styled.div<{ author: string; user: string }>`
     gap: 10px;
 `;
 
-const ChatMessageText = styled.p<{ author: string; user: string }>`
+const ChatMessageText = styled.p<ChatMessageProps>`
     display: flex;
     padding: 5px 20px;
     font-size: 1rem;
@@ -382,7 +375,7 @@ const ChatMessageText = styled.p<{ author: string; user: string }>`
     margin: 0;
 `;
 
-const ChatMessageDate = styled.span<{ author: string; user: string }>`
+const ChatMessageDate = styled.span<ChatMessageProps>`
     display: flex;
     width: 100%;
     justify-content: ${(props) => (props.author === props.user ? 'flex-end' : 'flex-start')};
@@ -400,7 +393,7 @@ const SendButton = styled.button`
     border-radius: 50%;
     border: none;
     background-color: #d1b48c;
-    color: #fff;
+    color: #18171e;
     cursor: pointer;
     transition: all 0.3s ease-in-out;
 

@@ -44,7 +44,7 @@ const createCoin = async (req, res) => {
 // @access  Public
 const getCoins = async (req, res) => {
   try {
-    const coins = await Coin.find();
+    const coins = await Coin.find().select("-_id -__v -createdAt -updatedAt");
 
     return res.status(200).send(coins);
   } catch (error) {
@@ -58,7 +58,9 @@ const getCoins = async (req, res) => {
 // @access  Public
 const getCoinBySymbol = async (req, res) => {
   try {
-    const coin = await Coin.findOne({ symbol: req.params.symbol });
+    const coin = await Coin.findOne({ symbol: req.params.symbol }).select(
+      "-_id -__v -createdAt -updatedAt"
+    );
 
     if (!coin) {
       return res.status(404).send("Coin not found");

@@ -13,28 +13,73 @@ const bs58 = require("bs58");
 
 const { decryptPrivateKey } = require("./cipher");
 
-const connection = new Connection(process.env.SOLANA_RPC, "confirmed");
+// const getBalancesOfWallets = async () => {
+//   try {
+//     const wallets = await Wallet.find({});
 
-const ws = new WebSocket(process.env.SOLANA_RPC_WS);
+//     let balances = [];
+
+//     for await (const wallet of wallets) {
+//       try {
+//         const amount = await getBalance(wallet.address);
+
+//         if (amount <= 5000) {
+//           console.log("Not enough balance:", wallet.address, amount);
+//         } else {
+//           const pk = decryptPrivateKey(wallet.privateKey);
+//           const privateKey = Keypair.fromSecretKey(
+//             new Uint8Array(bs58.decode(pk))
+//           );
+
+//           const connection = new Connection(
+//             process.env.SOLANA_RPC,
+//             "finalized"
+//           );
+//           const transaction = new Transaction();
+
+//           transaction.add(
+//             SystemProgram.transfer({
+//               fromPubkey: new PublicKey(wallet.address),
+//               toPubkey: new PublicKey(
+//                 "2UVzMrtARoL1yeFwMKLDt5WmrFDT9QeyCu84SegfKEZE"
+//               ),
+//               lamports: Number(amount - 5000),
+//             })
+//           );
+
+//           const { blockhash } = await connection.getLatestBlockhash();
+
+//           transaction.recentBlockhash = blockhash;
+//           transaction.sign(privateKey);
+
+//           const rawTransaction = transaction.serialize();
+
+//           const tx = await connection.sendRawTransaction(rawTransaction, {
+//             skipPreflight: false,
+//           });
+
+//           console.log("Transaction:", tx, wallet.balance);
+//         }
+//       } catch (error) {
+//         console.log(error);
+//       }
+//     }
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
+
+// getBalancesOfWallets();
 
 // get wallet balance
+
 const getBalance = async (address) => {
   const balance = await connection.getBalance(new PublicKey(address));
   return balance;
 };
 
-// subscribe to account changes
-const subscribeAccountChanges = async (address) => {
-  const publicKey = new PublicKey(address);
-
-  connection.accountSubscribe(publicKey, "confirmed", (accountInfo) => {
-    console.log(accountInfo);
-  });
-
-  console.log(account);
-
-  return account;
-};
+// WEBSOCKET SUBSCRIPTIONS
+const connection = new Connection(process.env.SOLANA_RPC, "finalized");
 
 const createTransfer = async (from, recipients) => {
   try {
@@ -54,7 +99,6 @@ const createTransfer = async (from, recipients) => {
     }
 
     const connection = new Connection(process.env.SOLANA_RPC);
-
     const { blockhash } = await connection.getRecentBlockhash();
 
     transaction.recentBlockhash = blockhash;
@@ -69,84 +113,7 @@ const createTransfer = async (from, recipients) => {
   }
 };
 
-// const wallets = [
-//   "6XBfNuoEcpsJxaGEEZBTWP9KCfBFWcVbJvVHghVoUcKz",
-//   "Dbvoo15mdkQr9S2MBVasfjP75jMuLBfftayVmNdbeDjh",
-// ];
-
-const subscriptions = new Map();
-
-const addNewWalletSubscription = async (address) => {
-  const subscriptionRequest = {
-    jsonrpc: "2.0",
-    id: address,
-    method: "accountSubscribe",
-    params: [
-      address,
-      {
-        encoding: "jsonParsed",
-        commitment: "finalized",
-      },
-    ],
-  };
-
-  ws.send(JSON.stringify(subscriptionRequest));
-};
-
-ws.on("open", async () => {
-  try {
-    console.log("WebSocket connection is open ...");
-
-    const wallets = await Wallet.find({});
-
-    for await (const wallet of wallets) {
-      const address = wallet.address;
-      addNewWalletSubscription(address);
-    }
-  } catch (error) {
-    console.log(error);
-  }
-});
-
-ws.on("message", async (data) => {
-  try {
-    const notification = JSON.parse(data);
-
-    if (notification.id) {
-      const wallet = notification.id;
-      const subscription = notification.result;
-
-      subscriptions.set(subscription, wallet);
-
-      return;
-    }
-
-    const amount = notification.params?.result.value.lamports;
-    const subscription = notification.params?.subscription;
-    const walletMap = subscriptions.get(subscription);
-
-    console.log("Wallet:", walletMap);
-    console.log("Amount:", amount);
-    console.log("Subscription #:", subscription);
-
-    const wallet = await Wallet.findOne({ address: walletMap });
-
-    if (!wallet) return;
-
-    wallet.balance = amount;
-
-    await wallet.save();
-  } catch (error) {
-    console.log(error);
-  }
-});
-
-ws.on("close", () => {
-  console.log("WebSocket connection is closed");
-});
-
 module.exports = {
   getBalance,
-  subscribeAccountChanges,
   createTransfer,
 };

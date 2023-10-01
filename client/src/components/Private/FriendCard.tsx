@@ -18,7 +18,6 @@ interface FriendCardProps {
     displayName: string;
     followers: number;
     earnings: number;
-    marketCap: number;
     volume: number;
     price: number;
     supply: number;

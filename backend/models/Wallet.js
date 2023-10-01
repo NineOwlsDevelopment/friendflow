@@ -37,12 +37,29 @@ const walletSchema = new Schema(
   },
   {
     timestamps: true,
-    transform: (_, ret) => {
-      delete ret.__v;
-      delete privateKey;
+    toJSON: {
+      transform: (_, ret) => {
+        delete ret.__v;
+        delete ret.privateKey;
+      },
     },
   }
 );
+
+walletSchema.statics.findByUser = async function (id) {
+  const wallet = await this.findOne({ user: id }).select({
+    chain: 1,
+    user: 1,
+    address: 1,
+    balance: 1,
+  });
+
+  if (!wallet) {
+    return null;
+  }
+
+  return wallet;
+};
 
 const Wallet = model("Wallet", walletSchema);
 

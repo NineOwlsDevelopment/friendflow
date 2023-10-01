@@ -1,8 +1,11 @@
+const { LAMPORTS_PER_SOL } = require("@solana/web3.js");
 const Coin = require("../models/Coin");
 const Key = require("../models/Key");
 const User = require("../models/User");
 const axios = require("axios");
+const bigInt = require("big-integer");
 
+// Get the price of a coin from CoinMarketCap
 const getCoinPrice = async (symbol) => {
   const apiKey = process.env.CMC_API_KEY;
   const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=${symbol}`;
@@ -16,6 +19,7 @@ const getCoinPrice = async (symbol) => {
   return result.data.data[symbol].quote.USD.price;
 };
 
+// Update the price of all coins in the database to their USD value
 const updateCoinPrices = async () => {
   const coins = await Coin.find({});
 
@@ -33,11 +37,28 @@ const updateCoinPrices = async () => {
   }
 };
 
+// Algorithm to calculate the price of a key based on the number of keys in circulation
+const getPrice = (circulating, amount) => {
+  let sum1 =
+    circulating === 0
+      ? 0
+      : ((circulating - 1) * circulating * (2 * (circulating - 1) + 1)) / 6;
+
+  let sum2 =
+    circulating === 0 && amount === 1
+      ? 0
+      : ((circulating - 1 + amount) *
+          (circulating + amount) *
+          (2 * (circulating - 1 + amount) + 1)) /
+        6;
+
+  let summation = sum2 - sum1;
+  return Math.ceil((summation * LAMPORTS_PER_SOL) / 16000);
+};
+
+// Get the price of a trade based on the number of keys in circulation
 const getTradePrice = async (side, amount, influencerId) => {
   try {
-    const DIVISOR = process.env.BONDED_CURVE_DIVISOR;
-
-    // Validate input
     if (!side || !amount || !influencerId) {
       throw new Error("Missing required fields.");
     }
@@ -56,46 +77,22 @@ const getTradePrice = async (side, amount, influencerId) => {
       return acc + holder.quantity;
     }, 0);
 
+    let price = Number(0);
+    supply = Number(supply);
+    amount = Number(amount);
+
     if (side === "buy") {
-      let intAmount = Math.floor(amount);
-      let fractionalAmount = amount - intAmount;
-      let price = 0;
-
-      for (let i = 0; i < intAmount; i++) {
-        price += (supply * Math.pow(supply, 2)) / DIVISOR;
-        supply++;
-      }
-
-      if (fractionalAmount > 0) {
-        price += ((supply * Math.pow(supply, 2)) / DIVISOR) * fractionalAmount;
-        supply += fractionalAmount;
-      }
-
-      return { price, supply };
+      price = getPrice(supply + 1, amount);
     }
 
     if (side === "sell") {
-      let intAmount = Math.floor(amount);
-      let fractionalAmount = amount - intAmount;
-      let price = 0;
-
-      for (let i = 0; i < intAmount; i++) {
-        price += (supply * Math.pow(supply, 2)) / DIVISOR;
-        supply--;
-      }
-
-      if (fractionalAmount > 0) {
-        price += ((supply * Math.pow(supply, 2)) / DIVISOR) * fractionalAmount;
-        supply -= fractionalAmount;
-      }
-
-      // if (supply < 0 || price < 0 || isNaN(price)) {
-      //   console.log(supply, price);
-      //   return 0.000001;
-      // }
-
-      return { price, supply };
+      price = getPrice(supply - amount + 1, amount);
     }
+
+    console.log("price:", price);
+    console.log("supply:", supply);
+
+    return price;
   } catch (error) {
     console.error(error);
     throw new Error("Server error");
@@ -109,15 +106,6 @@ const getPortfolioValue = async (userID) => {
     if (!user) {
       throw new Error("User not found");
     }
-
-    const friends = keys.reduce((acc, key) => {
-      if (acc[key.influencer]) {
-        acc[key.influencer] += key.quantity;
-      } else {
-        acc[key.influencer] = key.quantity;
-      }
-      return acc;
-    }, {});
 
     const keysArray = Object.keys(friends);
 
@@ -149,4 +137,5 @@ module.exports = {
   updateCoinPrices,
   getTradePrice,
   getPortfolioValue,
+  getPrice,
 };

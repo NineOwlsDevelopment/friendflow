@@ -6,7 +6,7 @@ const router = express.Router();
 // @route   POST api/coin
 // @desc    Create a coin
 // @access  Private
-router.post("/", coinController.createCoin);
+// router.post("/", coinController.createCoin);
 
 // @route   GET api/coin
 // @desc    Get all coins
@@ -21,11 +21,11 @@ router.get("/:symbol", coinController.getCoinBySymbol);
 // @route   Put /api/coin/:symbol
 // @desc    Update coin by symbol
 // @access  Private
-router.put("/:symbol", coinController.updateCoinBySymbol);
+// router.put("/:symbol", coinController.updateCoinBySymbol);
 
 // @route   Delete /api/coin/:symbol
 // @desc    Delete coin by symbol
 // @access  Private
-router.delete("/:symbol", coinController.deleteCoinBySymbol);
+// router.delete("/:symbol", coinController.deleteCoinBySymbol);
 
 module.exports = router;

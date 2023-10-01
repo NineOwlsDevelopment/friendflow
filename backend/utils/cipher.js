@@ -26,13 +26,6 @@ const generateKeypair = () => {
 
     const encryptedPrivateKey = encryptPrivateKey(privateKey);
 
-    // const iv = Buffer.from(process.env.IV_KEY, "hex");
-    // const encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY, "hex");
-    // const cipher = crypto.createCipheriv(process.env.ALGO, encryptionKey, iv);
-
-    // let encryptedPrivateKey = cipher.update(privateKey, "utf8", "hex");
-    // encryptedPrivateKey += cipher.final("hex");
-
     return { publicKey, encryptedPrivateKey };
   } catch (err) {
     console.log(err);
@@ -64,12 +57,6 @@ const decryptPrivateKey = (encryptedPrivateKey) => {
     return null;
   }
 };
-
-// const getPriv = generateKeypair();
-// console.log(getPriv);
-
-// const decrypt = decryptPrivateKey(getPriv.encryptedPrivateKey);
-// console.log(decrypt);
 
 module.exports = {
   encryptPrivateKey,

@@ -36,39 +36,33 @@ export default function Profile() {
         return displayName;
     };
 
-    const getUser = async () => {
-        try {
-            const res = await axios.get(`${process.env.REACT_APP_SERVER_URL}/user/${id}`, {
-                withCredentials: true,
-            });
-
-            const keysOwned = res.data.holders.filter(
-                (holder: any) => holder.user.toString() === user._id.toString()
-            )[0]?.quantity;
-
-            if (keysOwned) {
-                profile.setKeysOwned(keysOwned);
-            } else {
-                profile.setKeysOwned(0.0);
-            }
-
-            profile.setProfile(res.data);
-
-            setTimeout(() => {
-                setPending(false);
-            }, 500);
-        } catch (err) {
-            console.log(err);
-
-            setTimeout(() => {
-                setPending(false);
-            }, 500);
-        }
-    };
-
     useEffect(() => {
-        getUser();
-    }, [profile._id]);
+        axios
+            .get(`${process.env.REACT_APP_SERVER_URL}/user/${id}`, {
+                withCredentials: true,
+            })
+            .then((res) => {
+                profile.setProfile(res.data);
+
+                const keysOwned = res.data.holders.filter(
+                    (holder: any) => holder.user.toString() === user._id.toString()
+                )[0]?.quantity;
+
+                if (keysOwned) {
+                    profile.setKeysOwned(keysOwned);
+                } else {
+                    profile.setKeysOwned(0.0);
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setPending(false);
+                }, 500);
+            });
+    }, [id]);
 
     return (
         <>
@@ -119,6 +113,14 @@ export default function Profile() {
                             <div>
                                 <span
                                     style={{
+                                        fontSize: '0.7rem',
+                                    }}
+                                >
+                                    Key price
+                                </span>
+
+                                <span
+                                    style={{
                                         fontWeight: 'bold',
                                         fontSize: '0.7rem',
                                         color: '#d1b48c',
@@ -130,14 +132,6 @@ export default function Profile() {
                                         ? Number(profile.price / LAMPORTS_PER_SOL / 1000).toFixed(2) + 'k'
                                         : Number(profile.price / LAMPORTS_PER_SOL).toFixed(3)}{' '}
                                     SOL
-                                </span>
-
-                                <span
-                                    style={{
-                                        fontSize: '0.7rem',
-                                    }}
-                                >
-                                    Key price
                                 </span>
                             </div>
 

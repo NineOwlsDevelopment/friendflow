@@ -17,6 +17,7 @@ const Auth = OAuth.OAuth;
 
 const { generateKeypair } = require("../utils/cipher");
 const { getBalance } = require("../utils/solana");
+const { addNewWalletSubscription } = require("../utils/subscriptions");
 
 const mongoose = require("mongoose");
 
@@ -131,7 +132,6 @@ const twitterCallback = async (req, res) => {
 
   try {
     const { oauth_token, oauth_verifier } = req.body;
-    // const { requestToken, requestTokenSecret } = req.session;
 
     const handleGetOAuthAccessToken = async (e, userToken, userSecret) => {
       try {
@@ -159,8 +159,6 @@ const twitterCallback = async (req, res) => {
           skip_status: true,
         });
 
-        console.log(twitterAccount);
-
         let user = await User.findOne({
           twitterId: twitterAccount.id_str,
         }).select("-email");
@@ -179,64 +177,54 @@ const twitterCallback = async (req, res) => {
           user: user?._id,
         }).select("-privateKey");
 
+        // If the user does not exist, create a new user
         if (!user) {
-          user = new User({
-            twitterId: twitterAccount.id_str,
-            username: twitterAccount.screen_name.toLowerCase(),
-            displayName: twitterAccount.name,
-            email: twitterAccount.email,
-            avatar: twitterAccount.profile_image_url_https,
-            minimumKeys: 1,
-            claimed: true,
-          });
+          try {
+            user = new User({
+              twitterId: twitterAccount.id_str,
+              username: twitterAccount.screen_name.toLowerCase(),
+              displayName: twitterAccount.name,
+              email: twitterAccount.email,
+              avatar: twitterAccount.profile_image_url_https,
+              minimumKeys: 1,
+              claimed: true,
+              price: 62500,
+            });
 
-          const createWallet = generateKeypair();
+            const createWallet = generateKeypair();
 
-          wallet = new Wallet({
-            user: user._id,
-            address: createWallet.publicKey,
-            privateKey: createWallet.encryptedPrivateKey,
-            chain: "solana",
-            balance: 0,
-          });
-
-          const room = new Room({
-            name: user.username,
-            owner: user._id,
-            users: [user._id],
-          });
-
-          user.price = Math.floor(
-            ((1 * Math.pow(1, 2)) / process.env.BONDED_CURVE_DIVISOR) *
-              LAMPORTS_PER_SOL
-          );
-
-          user.holders = [
-            {
+            wallet = new Wallet({
               user: user._id,
-              quantity: 1,
-            },
-          ];
+              address: createWallet.publicKey,
+              privateKey: createWallet.encryptedPrivateKey,
+              chain: "solana",
+              balance: 0,
+            });
 
-          user.holding = [
-            {
-              key: user._id,
-              quantity: 1,
-            },
-          ];
+            const room = new Room({
+              name: user.username,
+              owner: user._id,
+              users: [user._id],
+            });
 
-          await wallet.save({ session });
-          await room.save({ session });
-          await user.save({ session });
+            await wallet.save({ session });
+            await room.save({ session });
+            await user.save({ session });
 
-          if (!room || !user || !wallet) {
-            return res
-              .status(401)
-              .send("There was an error creating your account.");
+            if (!room || !user || !wallet) {
+              return res
+                .status(401)
+                .send("There was an error creating your account.");
+            }
+
+            // Listen for new transactions on the users wallet
+            await addNewWalletSubscription(wallet.address);
+          } catch (error) {
+            console.log(error);
+            return res.status(500).send("Server error");
           }
         }
 
-        wallet.balance = await getBalance(wallet.address);
         user.followers = twitterAccount.followers_count;
         user.following = twitterAccount.friends_count;
         await user.save({ session });

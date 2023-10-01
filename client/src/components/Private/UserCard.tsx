@@ -40,12 +40,6 @@ export default function UserCard(user: UserCardProps) {
 
     const handleCardClick = async () => {
         try {
-            const res = await axios.get(`${process.env.REACT_APP_SERVER_URL}/user/${user._id}`, {
-                withCredentials: true,
-            });
-
-            profile.setProfile(res.data);
-
             navigate(`/a/user/${user._id}`);
         } catch (err) {
             console.log(err);

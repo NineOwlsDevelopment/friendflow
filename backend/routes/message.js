@@ -16,11 +16,11 @@ router.get("/:id", messageController.getMessage);
 // @route   PUT api/message/:id
 // @desc    Update a message
 // @access  Private
-router.put("/:id", messageController.updateMessage);
+// router.put("/:id", messageController.updateMessage);
 
 // @route   DELETE api/message/:id
 // @desc    Delete a message
 // @access  Private
-router.delete("/:id", messageController.deleteMessage);
+// router.delete("/:id", messageController.deleteMessage);
 
 module.exports = router;
