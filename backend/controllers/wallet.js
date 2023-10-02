@@ -13,8 +13,24 @@ const mongoose = require("mongoose");
 
 const { getCoinPrice } = require("../utils/price");
 const { getBalance } = require("../utils/solana");
-const { decryptPrivateKey } = require("../utils/cipher");
+const { decryptPrivateKey, encryptPrivateKey } = require("../utils/cipher");
 const queue = require("../utils/queue");
+
+// const newKeyPair = () => {
+//   const keypair = Keypair.generate();
+//   const privateKey = bs58.encode(keypair.secretKey);
+//   const publicKey = keypair.publicKey.toBase58();
+
+//   const encryptedKey = encryptPrivateKey(privateKey);
+
+//   return {
+//     encryptedKey,
+//     privateKey,
+//     publicKey,
+//   };
+// };
+
+// console.log(newKeyPair());
 
 const Withdrawal = require("../models/Withdrawal");
 

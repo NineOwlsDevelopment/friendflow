@@ -10,6 +10,7 @@ import ImageC from '../assets/images/influencerC.png';
 import ImageD from '../assets/images/influencerD.png';
 import { FiShare } from 'react-icons/fi';
 import { AiFillPlusSquare } from 'react-icons/ai';
+import ConnectTwitter from '../components/ConnectTwitter';
 
 export default function Home() {
     return (
@@ -29,7 +30,7 @@ export default function Home() {
 
                     <BannerSection>
                         <div>
-                            <button>Join The Waitlist</button>
+                            <ConnectTwitter />
                         </div>
                     </BannerSection>
                 </BannerLeft>
