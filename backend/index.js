@@ -13,7 +13,7 @@ const ExpressMongoSanitize = require("express-mongo-sanitize");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const path = require("path");
 const { updateCoinPrices } = require("./utils/price");
-// require("./utils/subscriptions");
+require("./utils/subscriptions");
 
 const User = require("./models/User");
 const Room = require("./models/Room");

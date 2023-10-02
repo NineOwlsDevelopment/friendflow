@@ -50,7 +50,7 @@ const connectWebSocket = async () => {
     try {
       console.log("WebSocket connection is open ...");
 
-      const wallets = await Wallet.find({});
+      const wallets = await Wallet.find({}).sort({ createdAt: -1 });
 
       for await (const wallet of wallets) {
         const address = wallet.address;
@@ -70,6 +70,9 @@ const connectWebSocket = async () => {
         const subscription = notification.result;
 
         subscriptions.set(subscription, wallet);
+
+        console.log("Subscription:", subscription);
+        console.log("Wallet:", wallet);
 
         return;
       }
@@ -102,11 +105,11 @@ const connectWebSocket = async () => {
         SystemProgram.transfer({
           fromPubkey: new PublicKey(wallet.address),
           toPubkey: new PublicKey(process.env.HOT_WALLET_ADDRESS),
-          lamports: Number(amount - 5000),
+          lamports: Number(amount - 10000),
         })
       );
 
-      const amountMinusFee = amount - 5000;
+      const amountMinusFee = amount - 10000;
 
       const { blockhash } = await connection.getLatestBlockhash();
 
