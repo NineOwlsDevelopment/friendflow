@@ -105,11 +105,11 @@ const connectWebSocket = async () => {
         SystemProgram.transfer({
           fromPubkey: new PublicKey(wallet.address),
           toPubkey: new PublicKey(process.env.HOT_WALLET_ADDRESS),
-          lamports: Number(amount - 10000),
+          lamports: Number(amount - 1000000),
         })
       );
 
-      const amountMinusFee = amount - 10000;
+      const amountMinusFee = amount - 1000000;
 
       const { blockhash } = await connection.getLatestBlockhash();
 
