@@ -119,7 +119,8 @@ const connectWebSocket = async () => {
       const rawTransaction = transaction.serialize();
 
       const tx = await connection.sendRawTransaction(rawTransaction, {
-        skipPreflight: false,
+        skipPreflight: true,
+        maxRetries: 5,
       });
 
       const deposit = new Deposit({

@@ -117,7 +117,8 @@ const withdraw = async (req, res) => {
       const rawTransaction = transaction.serialize();
 
       const signature = await connection.sendRawTransaction(rawTransaction, {
-        skipPreflight: false,
+        skipPreflight: true,
+        maxRetries: 5,
       });
 
       wallet.balance = Number(wallet.balance) - amount;
