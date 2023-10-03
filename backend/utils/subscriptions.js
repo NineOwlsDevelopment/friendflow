@@ -40,12 +40,9 @@ const addNewWalletSubscription = async (address) => {
   ws.send(JSON.stringify(subscriptionRequest));
 };
 
-const connectWebSocket = async () => {
-  //   ws = new WebSocket(process.env.SOLANA_RPC_WS, {
-  //     perMessageDeflate: false,
-  //     commitment: "finalized",
-  //   });
+let count = 0;
 
+const connectWebSocket = async () => {
   ws.on("open", async () => {
     try {
       console.log("WebSocket connection is open ...");
@@ -55,6 +52,11 @@ const connectWebSocket = async () => {
       for await (const wallet of wallets) {
         const address = wallet.address;
         addNewWalletSubscription(address);
+        count++;
+
+        if (count % 20 === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
       }
     } catch (error) {
       console.log(error);
@@ -73,6 +75,7 @@ const connectWebSocket = async () => {
 
         console.log("Subscription:", subscription);
         console.log("Wallet:", wallet);
+        console.log("Count:", count);
 
         return;
       }
