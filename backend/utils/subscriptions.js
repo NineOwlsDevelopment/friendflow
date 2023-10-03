@@ -86,6 +86,10 @@ const connectWebSocket = async () => {
         return console.log("No amount");
       }
 
+      if (amount <= 1000000) {
+        return;
+      }
+
       const subscription = notification.params?.subscription;
       const walletMap = subscriptions.get(subscription);
 

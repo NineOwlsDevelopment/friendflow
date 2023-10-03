@@ -85,14 +85,16 @@ const withdraw = async (req, res) => {
       const wallet = await Wallet.findByUser(user._id);
       if (!wallet) throw { status: 511, data: "User not found." };
 
-      let amount = Number(req.body.amount) * LAMPORTS_PER_SOL;
+      let amount = Math.floor(Number(req.body.amount) * LAMPORTS_PER_SOL);
       let address = req.body.address;
 
       if (!amount || !address) {
         throw { status: 400, data: "Please enter all fields." };
       }
 
-      if (amount < 0.01) throw { status: 400, data: "Invalid amount." };
+      if (amount / LAMPORTS_PER_SOL < 0.01) {
+        throw { status: 400, data: "Invalid amount." };
+      }
       if (isNaN(amount)) throw { status: 400, data: "Invalid amount." };
       if (wallet.balance < amount) {
         throw { status: 400, data: "Insufficient balance." };
