@@ -189,6 +189,8 @@ const twitterCallback = async (req, res) => {
               minimumKeys: 1,
               claimed: true,
               price: 62500,
+              points: 10,
+              rank: "bronze",
             });
 
             const createWallet = generateKeypair();

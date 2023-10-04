@@ -53,6 +53,11 @@ export default function Room() {
         messages: [],
     });
 
+    const handleContextMenu = (e: any) => {
+        e.preventDefault();
+        console.log('right click');
+    };
+
     const handleMesssageChange = (e: any) => {
         setMessage(e.target.value);
     };
@@ -210,7 +215,11 @@ export default function Room() {
                                 <ChatUserDiv>
                                     {message.author._id === user?._id && (
                                         <>
-                                            <ChatMessageText author={message.author._id} user={user?._id}>
+                                            <ChatMessageText
+                                                author={message.author._id}
+                                                user={user?._id}
+                                                onContextMenu={handleContextMenu}
+                                            >
                                                 {message.body}
                                             </ChatMessageText>
 

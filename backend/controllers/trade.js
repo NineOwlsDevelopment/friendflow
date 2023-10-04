@@ -141,10 +141,17 @@ const createBuy = async (req, res) => {
 
       if (wallet.user.toString() === influencerWallet.user.toString()) {
         wallet.balance -= Number(price);
+
+        // update user points only when buying from self
+        user.points = Number(user.points + amount * 2).toFixed(3);
       } else {
         wallet.balance -= Number(total);
         influencerWallet.balance += Number(fee1);
         influencer.earnings += Number(fee1);
+
+        // update user points and influencer points if they are not the same user
+        user.points = Number(user.points + amount * 2).toFixed(3);
+        influencer.points = Number(influencer.points + amount * 2).toFixed(3);
       }
 
       const transaction = new Transaction({

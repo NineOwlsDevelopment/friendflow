@@ -7,9 +7,15 @@ import { useUserStore, useWalletStore } from '../../store';
 import { CiMenuKebab } from 'react-icons/ci';
 import { BiCopy } from 'react-icons/bi';
 import { TbCurrencySolana } from 'react-icons/tb';
+import { PiParachuteLight } from 'react-icons/pi';
 import { BsDownload, BsUpload } from 'react-icons/bs';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import Bronze from '../../assets/images/coin_bronze.png';
+import Silver from '../../assets/images/coin_silver.png';
+import Gold from '../../assets/images/coin_gold.png';
+import Platinum from '../../assets/images/coin_platinum.png';
+import Diamond from '../../assets/images/coin_diamond.png';
 
 import DepositModal from '../../components/Private/DepositModal';
 import WithdrawModal from '../../components/Private/WithdrawModal';
@@ -114,6 +120,8 @@ export default function Account() {
                 withCredentials: true,
             });
 
+            console.log(response.data);
+
             user.setUser(response.data);
             localStorage.setItem('user', JSON.stringify(response.data));
         } catch (err) {
@@ -123,6 +131,23 @@ export default function Account() {
 
     const formatNumber = (value: any) => {
         return value >= 1000 ? `${(value / 1000).toFixed(2)}k` : value.toFixed(2);
+    };
+
+    const displayRank = (rank: string) => {
+        switch (rank) {
+            case 'bronze':
+                return <img src={Bronze} alt="" />;
+            case 'silver':
+                return <img src={Silver} alt="" />;
+            case 'gold':
+                return <img src={Gold} alt="" />;
+            case 'platinum':
+                return <img src={Platinum} alt="" />;
+            case 'diamond':
+                return <img src={Diamond} alt="" />;
+            default:
+                return <img src={Bronze} alt="" />;
+        }
     };
 
     useEffect(() => {
@@ -261,6 +286,63 @@ export default function Account() {
                     </ProfileNavBottomLeft>
                 </ProfileNavBottom>
             </ProfileNav>
+
+            <PointsSection>
+                <PointsSectionLeft>
+                    <RankTop>
+                        <h4>Rank</h4>
+                    </RankTop>
+
+                    <RankMiddle>{displayRank(user.rank)}</RankMiddle>
+
+                    <RankBottom>
+                        <span>{user.rank.charAt(0).toUpperCase() + user.rank.slice(1)}</span>
+                    </RankBottom>
+                </PointsSectionLeft>
+
+                <VerticalDivider />
+
+                <PointsSectionRight>
+                    <RankTop>
+                        <h4>Rewards</h4>
+                    </RankTop>
+
+                    <RankMiddle>
+                        <span>{user.points.toFixed(3)}</span>
+                    </RankMiddle>
+
+                    <RankBottom>
+                        <span>Points</span>
+                    </RankBottom>
+                </PointsSectionRight>
+            </PointsSection>
+
+            {/* <PortfolioSection>
+                <PortfolioSectionLeft>
+                    <PortfolioSectionInner>
+                        <PortfolioSectionInnerTop>
+                            <h4>Rank</h4>
+                        </PortfolioSectionInnerTop>
+
+                        <PortfolioSectionInnerBottom>
+                            <span>{user.rank.charAt(0).toUpperCase() + user.rank.slice(1)}</span>
+                        </PortfolioSectionInnerBottom>
+                    </PortfolioSectionInner>
+                </PortfolioSectionLeft>
+
+                <PortfolioSectionRight>
+                    <PortfolioSectionInner>
+                        <PortfolioSectionInnerTop>
+                            <PiParachuteLight />
+                            <h4>Reward Points</h4>
+                        </PortfolioSectionInnerTop>
+
+                        <PortfolioSectionInnerBottom>
+                            <span>{user.points} Pts</span>
+                        </PortfolioSectionInnerBottom>
+                    </PortfolioSectionInner>
+                </PortfolioSectionRight>
+            </PortfolioSection> */}
 
             <PortfolioSection>
                 <PortfolioSectionLeft>
@@ -762,4 +844,92 @@ const SaveButton = styled.button`
         border: 1px solid #e6e6e6;
         cursor: not-allowed;
     }
+`;
+
+const PointsSection = styled.div`
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    min-height: 150px;
+    height: fit-content;
+    color: #18171e;
+    background-color: #d1b48c;
+    padding: 20px;
+
+    svg {
+        font-size: 1.2rem;
+        color: #18171e !important;
+    }
+
+    h4 {
+        margin: 0;
+        padding: 0;
+        font-weight: 600;
+        color: #18171e;
+        font-size: 1.3rem;
+        letter-spacing: 1px;
+    }
+`;
+
+const PointsSectionLeft = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    flex: 50%;
+    font-weight: 500;
+    font-size: 1.2rem;
+`;
+
+const RankTop = styled.div`
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    flex: 20%;
+`;
+
+const RankMiddle = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 100px;
+
+    img {
+        height: 50px;
+    }
+`;
+
+const RankBottom = styled.div`
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+
+    font-weight: bolder;
+`;
+
+const VerticalDivider = styled.div`
+    border-left: 1px solid #18171e;
+    height: 150px;
+    margin: 0 10px;
+`;
+
+const PointsSectionRight = styled.div`
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    flex: 50%;
+    font-weight: 500;
+    font-size: 1.2rem;
 `;

@@ -44,6 +44,7 @@ export default function Friends() {
                         fontSize: '12px',
                         fontWeight: 400,
                         color: '#d1b48c',
+                        marginBottom: '10px',
                     }}
                 >
                     <span>Owned Keys</span>

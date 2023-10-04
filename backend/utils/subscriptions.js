@@ -73,10 +73,9 @@ const connectWebSocket = async () => {
 
         subscriptions.set(subscription, wallet);
 
-        console.log("Subscription:", subscription);
-        console.log("Wallet:", wallet);
-        console.log("Count:", count);
-
+        // console.log("Subscription:", subscription);
+        // console.log("Wallet:", wallet);
+        // console.log("Count:", count);
         return;
       }
 

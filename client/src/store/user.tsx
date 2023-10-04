@@ -16,6 +16,8 @@ interface UserState {
     minimumKeys: number;
     minKeysLastUpdated: string;
     earnings: number;
+    rank: string;
+    points: number;
     setUser: (userData: UserState) => void;
 }
 
@@ -35,6 +37,8 @@ const useUserStore = create<UserState>((set) => ({
     minimumKeys: 1,
     minKeysLastUpdated: '',
     earnings: 0,
+    rank: '',
+    points: 0,
     setUser: (userData: UserState) => set(userData),
 }));
 

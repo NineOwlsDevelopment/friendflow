@@ -89,7 +89,7 @@ export default function FriendCard(friend: FriendCardProps) {
                     </div>
 
                     <span>
-                        You hold <strong>{friend.currentlyHolding}</strong>
+                        You hold <strong>{friend.currentlyHolding.toFixed(3)}</strong>
                         {friend.currentlyHolding === 1 ? ' key' : ' keys'}
                     </span>
                 </CardLeftDetails>

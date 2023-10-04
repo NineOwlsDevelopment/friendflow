@@ -50,8 +50,12 @@ const userSchema = new Schema(
     },
     rank: {
       type: String,
-      enum: ["socialite", "influencer", "celebrity", "legend"],
-      default: "socialite",
+      enum: ["bronze", "silver", "gold", "platinum", "diamond"],
+      default: "bronze",
+    },
+    points: {
+      type: Number,
+      default: 0,
     },
     volume: {
       type: Number,
@@ -153,6 +157,8 @@ userSchema.statics.getUser = async function (data) {
     holding: 1,
     price: 1,
     earnings: 1,
+    points: 1,
+    rank: 1,
   });
 
   return user;
@@ -170,6 +176,8 @@ userSchema.statics.getTopUsers = async function () {
     holders: 1,
     holding: 1,
     price: 1,
+    points: 1,
+    rank: 1,
   });
 
   return users;
@@ -187,6 +195,8 @@ userSchema.statics.getFriends = async function (data) {
     holders: 1,
     holding: 1,
     price: 1,
+    points: 1,
+    rank: 1,
   });
 
   if (!user) {
