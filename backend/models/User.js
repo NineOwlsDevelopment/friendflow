@@ -166,7 +166,7 @@ userSchema.statics.getUser = async function (data) {
 
 // add static method for getting user
 userSchema.statics.getTopUsers = async function () {
-  const users = await this.find({}).sort({ volume: -1 }).limit(50).select({
+  const users = await this.find({}).sort({ volume: -1 }).limit(100).select({
     username: 1,
     displayName: 1,
     avatar: 1,

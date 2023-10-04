@@ -5,6 +5,8 @@ const Key = require("../models/Key");
 const Wallet = require("../models/Wallet");
 const mongoose = require("mongoose");
 const Transaction = require("../models/Transaction");
+// const { TwitterApi } = require("twitter-api-v2");
+const axios = require("axios");
 
 const { PublicKey, Keypair, LAMPORTS_PER_SOL } = require("@solana/web3.js");
 const { v4: uuidv4 } = require("uuid");
@@ -13,6 +15,15 @@ const { generateKeypair } = require("../utils/cipher");
 const { getBalance } = require("../utils/solana");
 const { getTradePrice } = require("../utils/price");
 const { populate } = require("../models/Fee");
+
+// const consumerKey = process.env.TWITTER_API_CONSUMER_KEY;
+// const consumerSecret = process.env.TWITTER_API_CONSUMER_SECRET;
+
+// const accessToken = process.env.TWITTER_API_ACCESS_TOKEN;
+// const accessTokenSecret = process.env.TWITTER_API_ACCESS_TOKEN_SECRET;
+
+// const clientId = process.env.TWITTER_API_CLIENT_ID;
+// const clientSecret = process.env.TWITTER_API_CLIENT_SECRET;
 
 // @route   Post /api/user
 // @desc    Manually add a user
@@ -37,6 +48,10 @@ const createUser = async (req, res) => {
       followers: req.body.followers,
       claimed: false,
       price: 62500,
+      points: 10,
+      minimumKeys: 1,
+      minKeysLastUpdated: Date.now(),
+      rank: "bronze",
     });
 
     const room = new Room({
