@@ -18,7 +18,8 @@ Install client dependencies - cd client -> yarn install
 
 Add required information in the example.env and rename to .env
 
-Start the backend server - node index.js
+Start the backend server - node index.js |
+
 Start the dev mode client - yarn start
 
 ## License
