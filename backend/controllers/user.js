@@ -211,6 +211,10 @@ const updateUser = async (req, res) => {
       query.minKeysLastUpdated = Date.now();
     }
 
+    if (req.body.tradelock) {
+      query.tradelock = req.body.tradelock;
+    }
+
     await User.updateOne({ _id: user._id }, { $set: query });
 
     return res.status(200).send(user);

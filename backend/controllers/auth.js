@@ -191,6 +191,8 @@ const twitterCallback = async (req, res) => {
               price: 62500,
               points: 10,
               rank: "bronze",
+              isLocked: false,
+              lockReleaseDate: Date.now(),
             });
 
             const createWallet = generateKeypair();
