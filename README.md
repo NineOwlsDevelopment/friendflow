@@ -11,6 +11,7 @@ Friend flow
 ## Installation
 
 Install backend dependencies - cd backend npm install
+
 Install client dependencies - cd client -> yarn install
 
 ## Usage
